@@ -3,6 +3,7 @@
 #include <fstream>
 #include <cmath>
 #include <ctime>
+#include <string>
 
 
 using namespace arma;
@@ -19,13 +20,41 @@ vec RHS(vec x){
    return values;
 }
 
+vec analytic(vec y){
+    int n = y.n_rows;
+    vec values(n);
+    int i;
+    for (i=0; i<n;i++){
+        values(i) = 1-(1-exp(-10))*y(i)-exp(-10*y(i));
+    }
+    return values;
+}
+
+vec relative_error(vec u, vec y){
+
+    int n = y.n_rows;
+    vec error = zeros(n);
+    int i;
+
+    cout << error << endl;
+    cout << u << endl;
+    cout << y << endl;
+    for (i=0; i<n; i++){
+
+        error(i) = log10(fabs((u(i)-y(i))/y(i)));
+
+        cout << error(i) << endl;
+
+    }
+    return error;
+}
+
 int main()
 {
 
-    clock_t start = clock();
 
 
-    int n = 100;
+    int n = 1000;
 
     double h = 1./(n+1);
 
@@ -55,19 +84,31 @@ int main()
     mat L, U, P;
     lu(L,U,P,A);
 
+    ofstream outfile;
+    string file_name = "ludecomp_values_n" + to_string(n) + ".txt";
+    outfile.open(file_name);
 
     vec f(n);
     f = RHS(x);
+
     vec u(n);
 
-    u = solve(A,f);
+    vec analsol(n);
+    analsol = analytic(x);
 
-    clock_t finish = clock();
+    vec y(n);
+    y = solve(L,f);
+    u = solve(U,y);
 
-    cout.precision(20);
-    cout << double(finish-start)<<endl;
+    vec log10error(n);
+    log10error = relative_error(u, analsol);
+
+    outfile << x << "   " << endl;
+    outfile << u << "   " << endl;
+    outfile << log10error;
 
 
     return 0;
 }
+
 
