@@ -69,9 +69,7 @@ double min_value(double * error, int n){
 int main()
 {
 
-    clock_t start, finish;
-    start = clock();
-    int n = 1000;                 //No. of grid points
+    int n = 10;                 //No. of grid points
     double h = 1./(n+1);        // Step length
 
 
@@ -114,14 +112,17 @@ int main()
 // Algorithm for solving:
     double coefficients[n]; //Coefficients obtained from row-reduction
     coefficients[0] = 2;
+    coefficients[1] = 2-1./coefficients[0];
 
     double rhs_update[n];   //The right hand side of the differential equation
-    rhs_update[n] = g[n];
+    rhs_update[n-1] = g[n-1];
 
 
-    for (i=1;i<n+1;i++){
+    for (i=2;i<n+1;i++){
+        if(i<n){
+
         coefficients[i] = 2-1./coefficients[i-1];
-
+        }
         rhs_update[n-i] = g[n-i] + rhs_update[n-i+1]/(coefficients[i-1]);     // Updating right hand side values in the row reduction
       }
 
@@ -154,17 +155,8 @@ int main()
 
 
     outfile << 1 << "   " << 0 <<"        "<< 0 << "      "<< 0 << endl;       // 2nd boundary condition
-    finish = clock();
-    double tid = (finish-start)/(double)CLOCKS_PER_SEC;
-    cout.precision(200);
-    cout << 1000.0*((double)finish-(double)start)/(double)CLOCKS_PER_SEC << endl;
-
-    cout << start << "      "<< finish<<endl;
-
-    cout << tid << endl;
 
 
-    #define CLOCKS_PER_MS  ((double)CLOCKS_PER_SEC/1000)
-    cout << clock()/CLOCKS_PER_MS;
     return 0;
 }
+
