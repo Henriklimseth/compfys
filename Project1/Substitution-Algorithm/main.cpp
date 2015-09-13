@@ -1,7 +1,6 @@
 #include <iostream>
 #include <cmath>
 #include <fstream>
-#include <armadillo>
 #include "time.h"
 #include <string>
 
@@ -9,7 +8,7 @@
 using namespace std;
 
 // Function f(x,n) takes array pointer and number of elements as arguments and returns pointer to function values.
-// Right hand side of the differential equation.
+// Right hand side of the differential equation. Call: f(x-array pointer, integer dimension).
 
 double* f(double* y,int k) {
 
@@ -28,7 +27,7 @@ double* f(double* y,int k) {
 
 
 // The analytical solution to the differential equation. For finding the relative error.
-// Call: analytic(x-array pointer, dimension). Returns pointer to function values.
+// Call: analytic(x-array pointer, integer dimension). Returns pointer to function values.
 
 double* analytic(double* y, int k){
 
@@ -41,7 +40,8 @@ double* analytic(double* y, int k){
     return values;
 }
 
-// Function for finding maximum value
+// Function for finding maximum value. Used for finding maximum value of the relative error.
+// Call: max_value(array pointer, integer dimension)
 double max_value(double* error, int n){
 
     double max = error[0];
@@ -54,7 +54,7 @@ double max_value(double* error, int n){
     return max;
 }
 
-// Function for finding minimum value
+// Function for finding minimum value. Not really needed.
 double min_value(double * error, int n){
     double min = error[0];
     int i;
@@ -96,7 +96,15 @@ int main()
 
     double * g;
     g = new double[n];
+    
+// Setting up the timer:
+clock_t start, finish;
+start = clock;
 
+// Run algorithm many times to get accurate measurement of time
+int k = 10000; //Remember to change k relative to n
+int t;
+for (t=0; t<k; t++){
 
 // Setting up x-values:
     int i;
@@ -137,7 +145,7 @@ int main()
     u[0] = 0;                   // Index is shifted relative to the other arrays (ex. x[i] <-> u[i+1])
 
 
-    double* relative_error;     // Pretty self-explanatory
+    double* relative_error;     // Self-explanatory
     relative_error = new double[n];
 
 
@@ -155,7 +163,9 @@ int main()
 
 
     outfile << 1 << "   " << 0 <<"        "<< 0 << "      "<< 0 << endl;       // 2nd boundary condition
-
+}
+finish = clock();
+cout << ( (float)(finish-start)/CLOCKS_PER_SEC/k) << endl;
 
     return 0;
 }
