@@ -1,0 +1,337 @@
+\documentclass[norsk, 12pt]{article}
+
+\usepackage[T1]{fontenc}    % Riktig fontencoding
+\usepackage[utf8]{inputenc} % Riktig tegnsett
+\usepackage{babel}          % Ordelingsregler, osv
+\usepackage{graphicx}       % Inkludere bilder
+\usepackage{booktabs}       % Ordentlige tabeller
+\usepackage{url}            % Skrive url-er
+\usepackage{textcomp}       % Den greske bokstaven micro i text-mode
+%\usepackage{units}          % Skrive enheter riktig
+\usepackage{float}          % Figurer dukker opp der du ber om
+%\usepackage{lipsum}         % Blindtekst
+\usepackage{amsmath}        % Mattestæsj
+\usepackage{listings}       % Kodetekst
+%\usepackage{lipsum} 	    % Package to generate dummy text throughout this template
+%\usepackage[lined,boxed,commentsnumbered]{algorithm_2e}
+\usepackage{multicol} 	    % Used for the two-column layout of the document
+\usepackage[a4paper,margin=1.0in]{geometry}
+%\usepackage{comment}
+\usepackage{amsfonts}
+
+% Egendefinerte kommandoer
+\newcommand{\f}{\frac}
+\newcommand{\ddr}{\frac{d}{dr}}
+
+% JF i margen
+\makeatletter
+\renewcommand{\subsubsection}{\@startsection{subsubsection}{3}{-2cm}%
+{-\baselineskip}{0.5\baselineskip}{\bf\large}}
+\makeatother
+\newcommand{\jf}[1]{\subsubsection*{JF #1}\vspace*{-2\baselineskip}}
+
+% Skru av seksjonsnummerering
+\setcounter{secnumdepth}{-1}
+
+%, trim = 1cm 7cm 1cm 7cm % PDF-filer som bilde
+
+\begin{document}
+
+% Forside
+\begin{titlepage}
+\begin{center}
+
+\textsc{\Large FYS4150 - Computational Physics}\\[0.5cm]
+\rule{\linewidth}{0.5mm} \\[0.4cm]
+{ \huge \bfseries  PROJECT 2}\\[0.10cm]
+\rule{\linewidth}{0.5mm} \\[1.5cm]
+\textsc{\Large }\\[1.5cm]
+\textsc{}\\[1.5cm]
+
+% Av hvem?
+%\begin{minipage}{0.49\textwidth}
+ %   \begin{center} \large
+  %      Henrik Sverre Limseth\\ \url{henrisli@uio.no} \\[0.8cm]
+   % \end{center}
+%\end{minipage}
+%\bigskip \\
+\begin{minipage}{0.49\textwidth}
+    \begin{center} \large
+        Henrik Sverre Limseth\\ \url{henrisli@uio.no} \\[0.8cm]
+    \end{center}
+\end{minipage}
+
+%\vfill
+
+% Dato nederst
+\large{Dato: \today}
+
+\end{center}
+\end{titlepage}
+
+\section{Sammendrag}
+I dette prosjektet løser Schrödingerlikningen for to elektroner i et tredimensjonalt harmonisk
+oscillatorpotensial, i laveste dreieimpulstilstand ($\ell=0$), med og uten den frastøtende Coulombvekselvirkningen mellom dem. Dette gjøres ved Jacobis 
+rotasjonsmetode.
+
+%\begin{multicols*}{2}
+\section{Problemet}
+Begynner med å se på den radielle Schrödingerlikningen for ett elektron:
+\small
+$$ -\f{\hbar^2}{2m}\left(\f{1}{r^2}\ddr r^2\ddr -\f{\ell(\ell+1)}{r^2}\right)R + VR=ER$$
+
+I vårt tilfelle er $V(r) = \f{1}{2}m\omega^2r^2$ hvor $\omega$ er svingefrekvensen. For å forenkle
+substituerer vi $R(r)= \f{1}{r}u(r)$ og introduserer dimensjonsløs variabel $\rho = \f{r}{\alpha}$ med
+$\alpha = \sqrt{\f{\hbar}{m\omega}}$. Deretter definerer vi $\lambda = \f{2E}{\hbar\omega}$ og siden vi
+setter $\ell=0$ ender vi etter litt algebra opp med likningen
+$$\left(-\f{d^2}{d\rho^2}+\rho^2\right)u(\rho) = \lambda u(\rho).$$
+Denne må ha randbetingelser $u(0)=0$ (ellers divergerer $R(0)$) og $\lim\limits_{\rho\rightarrow\infty}u(\rho)=0$ 
+(for normalisering). Det er altså denne likningen vi ønsker å løse numerisk i første omgang.
+
+Vi går så videre til to-elektronproblemet med en helt analog tilnærming. 
+Den radielle Schrödingerlikningen for $u(r)$ for dette systemet blir:
+
+\begin{align*}
+ &\bigg[-\f{\hbar^2}{2m}\left(\f{d^2}{dr_1^2}+\f{d^2}{dr_2^2}\right)+\f{1}{2}m\omega^2\left(r_1^2+r_2^2\right)+ \f{\beta e^2}{|\vec r_1-\vec r_2|}\bigg]u(r_1,r_2) = E^{(2)}u(r_1,r_2)
+\end{align*}
+
+hvor $\beta e^2=1.44$eVnm.
+For å forenkle innføres nye koordinater: den relative avstanden $\vec r = \vec r_1-\vec r_2$ og massesenterkoordinaten
+$\vec R=\f{1}{2}(\vec r_1+\vec r_2)$. Siden løsningene er separable: $u(r,R) = \psi(r)\phi(R)$ og  energien er summen
+av massesenterenergien og den relative energien mellom elektronene: $E^{(2)}=E_r+E_R$ ender vi opp med to likninger:
+en i massesenterkoordinaten og en i den relative avstanden. Vi konsentrerer oss om sistnevnte, som blir:
+$$\left(-\f{\hbar^2}{m}\f{d^2}{dr^2}+\f{1}{4}m\omega^2r^2+\f{\beta e^2}{r}\right)\psi(r)=E_r\psi(r).$$
+På samme måte som før introduseres den dimensjonsløse variablen $\rho = \f{r}{\alpha}$, denne gangen med 
+$\alpha = \f{\hbar^2}{m\beta e^2}$. For å gjøre likningen penere introduseres også ``frekvensen''
+$$\omega_r = \f{m\omega\alpha^2}{2\hbar} = \f{ h^3\epsilon_0^2\omega}{\pi me^4}$$ hvor $h$ er Plancks konstant og $\epsilon_0$
+er tomromspermittiviteten, og 
+$$\lambda = \f{m\alpha^2}{\hbar^2}E_r = \f{4h^2\epsilon_0^2}{m e^4}E_r.$$
+Den radielle Schrödingerlikningen blir til slutt
+
+$$\left(-\f{d^2}{d\rho^2}+\omega_r^2\rho^2+\f{1}{\rho}\right)\psi(\rho) = \lambda\psi(\rho).$$
+
+Vi ser at den er lik likningen for ett elektron hvis vi endrer potensialet $\rho^2\rightarrow \omega_r^2\rho^2+\f{1}{\rho}$.
+
+
+\section{Metode}
+Før diskretisering av likningen kan finne sted må et intervall av interesse defineres, siden vi ikke kan diskretisere
+hele $[0,\infty)$. Fordi potensialet i første tilnærming (ett elektron) $V\propto r^2$ raskt øker for store $r$ (store $\rho$) og har bunnpunkt i $r=0$ er
+det rimelig å anta at bølgefunksjonen er maksimal i et intervall $\rho \in [0, \rho_{max}]$ og raskt dør ut for 
+store $\rho$.
+
+For to vekselvirkende elektroner har vi $V(\rho) = \omega_r^2\rho^2+\f{1}{\rho}$. For å finne de interessante verdiene
+for $\rho$ finner vi det reelle ekstremalpunktet. Dette vil være et bunnpunkt i potensialet siden 
+$\lim\limits_{\rho\rightarrow\infty}V(\rho) = \lim\limits_{\rho\rightarrow0} V(\rho) = \infty$ og $V(\rho)$ er kontinuerlig.
+Derfor er det naturlig å anta at bølgefunksjonen vil være maksimal i dette området.
+
+\begin{align*}
+&\f{dV}{d\rho}=2\omega_r^2\rho-\f{1}{\rho^2}=0\ \ \ \Rightarrow\ \ \ \rho_{0}=\f{1}{\sqrt[3]{2\omega_r^2}}
+\end{align*}
+For $\omega_r = 0.01$ får vi $\rho_0 \approx 3.68$. Vi trenger altså ikke å velge $\rho_{max}$ veldig stor for å få med
+de viktigste delene av bølgefunksjonen.
+
+
+Deretter bruker vi standard tilnærming til andrederivert:
+$$u''(\rho)\approx \f{u(\rho+h)-2u(\rho)+u(\rho-h)}{h^2}$$
+hvor $h=\f{\rho_{max}}{n}$ med $n$ lik antall punkter vi har inndelt intervallet i. Diskretiskert blir da $\rho_i = ih$, $u_i = u(\rho_i)$ og $V_i = V(\rho_i)$
+for $i=0,1,2,\dots ,n$. Den diskretiserte likningen blir
+$$-\f{1}{h^2}(u_{i+1} -2u_i+u_{i-1}) + V_iu_i = \lambda u_i.$$
+Vi definerer $d_i = \f{2}{h^2}+V_i^2$ og $e = -\f{1}{h^2}$ og ender opp med
+$$eu_{i-1}+d_iu_i+e_{i+1}u_{i+1} = \lambda u_i.$$
+
+Dette kan omskrives som en matriselikning:
+$$A \vec u = \lambda \vec u$$
+med
+
+$$ A = \left(\begin{matrix}
+ d_1 & e & 0 & 0 & \dots & 0 \\
+ e & d_2 & e & 0 & \dots & 0 \\
+ 0 & \ddots & \ddots & \ddots &  & \vdots \\
+ \vdots & & \ddots & \ddots & \ddots & 0 \\
+ 0 & \dots & 0 & e & d_{n-2} & e\\
+ 0 & \dots & \dots & 0 & e & d_{n-1} \\
+\end{matrix}\right)$$ 
+og 
+
+$$ \vec u  = \left(\begin{matrix} u_1 \\ u_2 \\ \vdots \\u_{n-1} \end{matrix}\right).$$
+Dette er altså et egenverdiproblem og vi kan anvende Jacobis snurretriks.
+Denne metoden baserer seg på å utføre similærtransformasjoner på $A$: $A \rightarrow S^{-1}AS$ med $S$ 
+$(n-1)\times(n-1)$-rotasjonsmatriser til den roterte matrisen er tilnærmet diagonal, dvs. til alle elementer som 
+ikke ligger på diagonalen er tilnærmet lik 0. Da vil diagonalelementene tilnærmet være egenverdiene til $A$.
+
+I tillegg utfører vi alle transformasjonene på en identitetsmatrise $R$: $R \rightarrow S^{-1}RS$. Kolonnene til $R$ vil da
+tilnærmet være egenvektorene til $A$, tilsvarende $\vec u$ for forskjellige verdier av $\lambda$, hvilket igjen 
+tilsvarer den numeriske løsningen for $u(\rho)$.
+
+Trikset går ut på å for hver iterasjon velge rotasjonsmatrisen $S$ slik at de største ikke-diagonale elementene til $A$
+vil være 0 etter transformasjonen. Vi definerer derfor $S$ på følgende måte:
+
+$$s_{kk} = s_{ll} = cos\theta$$
+$$\ s_{kl} = s_{lk} = -sin\theta$$
+$$s_{ii} = 1,\ \ \ i\neq k,l$$
+hvor $k,\ l$ er valgt slik at $a_{kl}=a_{lk}$ ($A$ er symmetrisk) er det største ikke-diagonale elementet i $A$.
+Dersom $B = S^{-1}AS$ får vi (med forkortelsen $c=\cos\theta,\ s=\sin\theta$):
+$$b_{ii} = a_{ii},\ \ i\neq k,l$$
+$$b_{ik} = a_{ik}c - a_{il}s,\ \ i\neq k,l$$
+$$b_{il} = a_{il}c + a_{ik}s,\ \ i\neq k,l$$
+$$b_{kk} = a_{kk}c^2-2a_{kl}cs+a_{ll}s^2$$
+$$b_{ll} = a_{ll} c^2 +2a_{kl}cs + a_{kk}s^2$$
+$$b_{kl} = (a_{kk}-a_{ll})cs+a_{kl}(c^2-s^2)$$
+hvor vi  vil ha $b_{kl}=0$. Dette er automatisk oppfylt hvis $\theta$ velges slik at
+$$\cot2\theta = \f{a_{ll}-a_{kk}}{a_{kl}}\equiv \tau.$$
+Definer $t = \tan\theta$. Ved identiteten $\cot2\theta = \f{1}{2}(\cot\theta-\tan\theta)$ oppnår vi løsningene
+$$t = -\tau\pm\sqrt{1+\tau^2}.$$
+
+
+Det er altså to mulige verdier av $t$. Vi trenger å velge den som gjør at $|\theta|\leq\f{\pi}{4}$. Dette er nødvendig
+for å sikre konvergens [1]. For å bestemme hvilken $t$ som gjør jobben antar vi $|\theta|\leq\f{\pi}{4}$ og ser hvilke
+begrensninger det setter på $t$:
+
+Siden $|\theta|\leq \f{\pi}{4} \Leftrightarrow \cos\theta \geq \f{1}{\sqrt{2}}$ (når $\theta\in [0,2\pi]$) får vi
+$$\f{1}{\sqrt{1+t^2}} \geq \f{1}{\sqrt{2}}\  \Leftrightarrow\  2\geq1+t^2$$
+
+$$\Leftrightarrow \ \ t^2\leq 1\ \  \Leftrightarrow\ \ \ |t|\leq1.$$
+
+Vi må altså ha $|\tau\mp\sqrt{1+\tau^2}|\leq1$. Denne ulikheten er tilfredsstilt ved å velge ``$-$'' for $\tau>0$ og ``$+$'' for $\tau<0$.
+Dette tilsvarer
+$$t = -\tau + \sqrt{1+\tau^2},\ \ \ \text{hvis}\ \ \tau>0$$
+$$t = -\tau - \sqrt{1+\tau^2},\ \ \ \text{hvis}\ \ \tau<0$$
+
+For $\tau=0$ er det likegyldig og
+$|\theta|= \f{\pi}{4}$. Ved å velge den minste mulige verdien for $t$ sikrer vi dermed $|\theta|\leq\f{\pi}{4}$.
+
+Siden dette valget av $t$ sikrer at $c\in\left[\f{1}{\sqrt{2}}, 1\right]$ medfører det at $(1-c)$ og $\f{1}{c^2}$ vil
+anta minimale verdier. Altså vil ethvert ledd i 
+$$\|B-A\|_F^2=4(1-c)\sum\limits_{i=1,i\neq k,l}^{n-1}(a_{ik}^2+a_{il}^2)+\f{2a_{kl}^2}{c^2}$$
+være minimalt, så Fröbeniusdifferansen til $A$ og den transformerte matrisen $B$ vil være minimal.
+
+Når $t$ er bestemt kan $c$ og $s$ beregnes: $$c = \f{1}{\sqrt{1+t^2}},\ \ s = ct$$
+og vi kan regne ut de nye matriseelementene. Dette gjentas til det maksimale ikke-diagonale elementet i matrisen
+er mindre enn en toleranse $\epsilon\approx0$ (i dette prosjektet er $\epsilon=10^{-8}$ brukt).
+
+Algoritmen blir som følger:
+
+\textbf{1)} Finn ikke-diagonalt element med høyest verdi: $$|a_{kl}|=\max\limits_{i\neq j}|a_{ij}|$$ og plasseringen $k,l$ til
+dette elementet.
+
+\textbf{2)} Regn ut $$\tau=\f{a_{ll}-a_{kk}}{2a_{kl}}$$ og bestem $$t=-\tau\pm\sqrt{1+\tau^2}$$ med ``$+$'' for $\tau\geq0$ og ``$-$'' for 
+$\tau<0$. Regn deretter ut $$c = \f{1}{\sqrt{1+t^2}}\ \  \text{og}\ \ \  s=ct.$$
+
+\textbf{3)} Regn ut rotasjonsmatriseelementene: $$s_{ii} = 1,\ \ i\neq k,l$$
+$$s_{ll} = s_{kk} = c$$
+$$s_{lk}=-s_{kl} = s$$
+
+\textbf{4)} Regn ut elementene $b_{ij}$ til $B = S^{T}AS$ og redefiner matrisen $A$ til å ha disse elementene.
+
+\textbf{5)} Oppdater matrisen som har egenvektorene til $A$ som kolonner: $$R\rightarrow S^TRS$$
+
+\textbf{6)} Gjenta \textbf{1} - \textbf{5} til $\max\limits_{i\neq j}\{a_{ij}^2\}<\epsilon$.
+
+\section{Resultater}
+Vi begynner med å løse likningen for ett elektron for forskjellige verdier av $\rho_{max}$, med $n=100$. Vi kjenner
+de tre laveste egenverdiene i dette tilfellet: $\lambda_0 = 3,\ \ \lambda_1 = 7,\ \ \lambda_2 = 11$. Dermed kan vi sjekke
+for hvilken verdi av $\rho_{max}$ vi får de mest nøyaktige resultatene. Tabell 1 viser de beregnede verdiene for
+$\lambda_0$, $\lambda_1$ og $\lambda_2$ for forskjellige $\rho_{max}$ med $n=100$, kolonnen til høyre viser antall
+iterasjoner algoritmen brukte på å få alle ikke-diagonale elementer mindre enn $\epsilon = 10^{-8}$.
+\begin{table}[h!]
+\centering
+ \begin{tabular}{|c|c|c|c|c|}\hline
+  $\rho_{max}$ & $\lambda_0$ & $\lambda_1$ & $\lambda_2$ & Antall iterasjoner\\ \hline
+  1 & 10.1504 & 39.7864 & 89.0886 & 17114\\
+  2 & 3.5294 & 11.166 & 23.5153 & 16755\\
+  3 & 3.01188 & 7.32662 & 12.939 & 16588\\
+  4 & 2.99953 & 7.00088 & 11.0724 & 16405\\
+  4.5 & 2.99937 & 6.99696 & 10.998 & 16270\\
+  5 & 2.99922 & 6.99609 & 10.9907 & 16217\\
+  6 & 2.99887 & 6.99234 & 10.9836 & 16021\\
+  7 & 2.99847 & 6.99234 & 10.9813 & 15835\\
+  8 & 2.998 & 6.98999 & 10.9755 & 15696\\ \hline
+ \end{tabular}
+ \caption{De tre minste egenverdiene beregnet for forskjellige $\rho_{max}$ ved $n=100$}
+ \end{table}
+ 
+ 
+For lave $\rho_{max}$ er resultatene helt ubrukelige. Dette er antakeligvis fordi vi ikke får med oss deler av rommet
+der potensialet fortsatt er relativt lite og bølgefunksjonen har gode levekår. For høye $\rho_{max}$ blir også resultatene
+mindre nøyaktige. Intuitivt skulle man tenke at å ta med større deler av rommet gir mer nøyaktige beregninger, men antakeligvis
+trenger man høyere $n$ for å realisere dette.
+
+Rundt $\rho_{max}$ lik 3-4.5 slutter metoden å tilnærme egenverdiene
+nedenfra og begynner å tilnærme ovenfra. Det tyder på at det er i dette området vi får mest nøyaktige beregninger.
+ Siden de høyere egenverdiene vil konvergere
+tregest er det lurt å velge den $\rho_{max}$-verdien som gir mest nøyaktig $\lambda_2$.
+$\rho_{max} = 4.5$ blir valgt for å studere ett-elektronsystemet videre, ettersom denne verdien gir rimelig nøyaktige 
+$\lambda_0$ og $\lambda_1$ og viktigst: den mest nøyaktige $\lambda_2$.
+
+Vi legger merke til at antall iterasjoner minker langsomt med voksende $\rho_{max}$ for konstant $n$.
+
+Tabell 2 viser de tre minste egenverdiene beregnet for forskjellige $n$ med $\rho_{max}=4.5$. 
+\begin{table}[h!]
+ \centering
+
+\begin{tabular}{|c|c|c|c|}\hline
+ $n$ & $\lambda_0$ & $\lambda_1$ & $\lambda_2$\\ \hline
+ 100 & 2.99937 & 6.99696 & 10.998\\
+ 200 & 2.99984 & 6.99933 & 11.0038 \\
+ 300 & 2.99978 & 6.99978 & 11.0049 \\
+ 400 & 2.99996 & 6.99993 & 11.0053 \\ \hline 
+\end{tabular}
+\caption{Beregnede egenverdier for $\rho_{max} = 4.5$}
+\end{table}
+
+Det ser ut til at $\lambda_2$ begynner å divergere for høye $n$. Det virker som 4.5 var en for lav verdi for $\rho_{max}$, så vi
+prøver på nytt med $\rho_{max} = 5$, se Tabell 3.
+
+\begin{table}[h!]
+ \centering
+ \begin{tabular}{|c|c|c|c|c|c|}\hline
+  $n$ & $\lambda_0$ & $\lambda_1$ & $\lambda_2$ & Tid [s] & Antall iterasjoner \\ \hline
+  100 & 2.99923 & 6.99617 & 10.9908 & 0.19 & 16475\\
+  200 & 2.99981 & 6.99904 & 10.9978 & 2.94 & 66828 \\
+  300 & 2.99991 & 6.99957 & 10.9991 & 14.4 & 150798 \\
+  400 & 2.99995 & 6.99976 & 10.9996 & 44.66 & 269021 \\
+  500 & 2.99997 & 6.99985 & 10.9998 & 108.05 & 422320 \\ \hline 
+ \end{tabular}
+\caption{Beregnede egenverdier for $\rho_{max} = 5$, sammen med tiden algoritmen brukte på å kjøre og antall iterasjoner
+den brukte.}
+\end{table}
+
+Vi ser at $\lambda_0$ og $\lambda_1$ konvergerer omtrent like raskt for $\rho_{max}=5$ som for $\rho_{max}=4.5$, men
+for $\rho_{max}=5$ divergerer ikke $\lambda_2$. For $n=500$ er resultatene veldig nøyaktige og kun med en liten feil i
+fjerde desimal for $\lambda_1$ og $\lambda_2$. Vi legger også merke til at antall iterasjoner vokser kraftig med $n$.
+
+\begin{figure}
+ \centering
+ \includegraphics[scale=0.7]{transformasjoner.png}
+ \caption{Antall similærtransformasjoner som trengs før alle ikke-diagonale elementer omtrent er null som funksjon av
+ $\rho_{max}$ og $n$.}
+\end{figure}
+
+Figur 1 viser antall similærtransformasjoner algoritmen bruker som funksjon av $\rho_{max}$ og $n$. Som funksjon av $\rho_max$
+synker det langsomt med økende $\rho_{max}$, det kan se ut som et lineært forhold. Som funksjon av $n$ vokser det 
+raskere og raskere for høyere $n$, forholdet ser eksponensielt ut her, eller i det minste kvadratisk. Dessverre er det altfor få datapunkter til å kunne
+fastslå noen streng sammenheng.
+
+For å undersøke dette nærmere plottes tiden algoritmen brukte mot antall punkter og antall tranformasjoner mot tiden
+(Figur 2). Det ser ut til at antall transformasjoner er proporsjonal med logaritmen til tiden algoritmen bruker, mens
+tiden algoritmen bruker ser veldig ut til å vokse eksponensielt med antall steg. Det er veldig rart at antall
+transformasjoner og tiden algoritmen bruker ikke henger sammen lineært! Ut ifra plottene virker det i hvert fall
+rimelig å anta
+$$t\propto e^{n^\alpha}\Rightarrow \text{Transformasjoner} \propto \ln e^{n^\alpha} = n^\alpha $$
+for en $\alpha>0$.
+
+\begin{figure}
+ \centering
+ \includegraphics[scale=0.7]{tidsomfunkavn.png}
+ \caption{Tid algoritmen bruker mot dimensjonen av matrisen og antall transformasjoner som må gjennomføres mot tiden}
+\end{figure}
+
+
+%\end{multicols*}
+
+\section{Kilder}
+1: http://web.stanford.edu/class/cme335/lecture7.pdf
+
+
+
+\end{document}
