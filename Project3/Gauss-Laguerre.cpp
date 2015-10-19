@@ -3,6 +3,7 @@
 #include "gauss_laguerre.cpp"
 #include "lib.h"
 #include "time.h"
+#include <fstream>
 
 
 using namespace std;
@@ -11,7 +12,7 @@ double integrand(double theta1, double phi1, double r1, double theta2, double ph
 
 int main()
 {
-    int n = 30;
+    //int n = 30;
     double alpha = 2.0;
 
     double twoPi = 6.28318530718;
@@ -21,6 +22,20 @@ int main()
     double thetamin = 0.0;
     double thetamax = twoPi/2.;
 
+    double exact = 5*twoPi*twoPi/(4*16*16);
+
+    ofstream infile;
+    infile.open("gaulag.txt");
+
+    infile << "n" << "      " << "Approx" << "      " << "Relative Error" << "      " << "Time" << endl;
+
+    int*N;
+    N = new int[5];
+    N[0] = 10; N[1]=15; N[2]=20; N[3] = 25; N[4] = 30;
+
+    for(int m=0; m<5; m++){
+
+    int n = N[m];
     double *phi;
     phi = new double[n];
     double * theta;
@@ -66,10 +81,13 @@ int main()
     finish = clock();
 
 
+    infile << n << "      " << integral << "      " << (exact-integral)/exact << "      " << (((double) finish-start)/CLOCKS_PER_SEC) << endl;
+    }
+    /*
     cout << "Gauss-Laguerre:    " << integral << endl;
     cout << "Exact answer:      " << 5*twoPi*twoPi/(16*16*4) << endl;
     cout << "Time taken:        " << ((double) (finish-start)/CLOCKS_PER_SEC) << endl;
-
+*/
     return 0;
 }
 
