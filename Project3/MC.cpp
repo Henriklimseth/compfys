@@ -1,6 +1,8 @@
 #include <iostream>
 #include "lib.h"
 #include <cmath>
+#include <fstream>
+#include "time.h"
 
 using namespace std;
 //Cartesian integrand
@@ -12,17 +14,37 @@ double integrand_spher(double *x);
 
 int main()
 {
-    int n = pow(10, 7);
+//    int n = pow(10, 7);
 //    cout << "Number of Monte-Carlo samples: ";
 //    cin >> n;
 
+    int*N;
+    N = new int[5];
+    for(int i=0; i<5;i++){
+        N[i] = i+3;
+    }
 
     long idum = -1;
+    double pi = 3.14159265359;
+    double exact = 5*pi*pi/(16*16);
+
+    ofstream infile;
+    infile.open("MC_brute.txt");
+
+    infile << "n" << "      " << "Approx" << "      " << "Relative Error" << "      " <<"       " << "Std.deviation" << "       " <<"Time" << endl;
+
+    for(int m=0; m<5;m++){
+    int n = pow(10,N[m]);
+
     double E_f = 0;     //Expectation value of function to integrate
     double E_ff = 0;    //Expectation value of function squared.
 
     double f_x;         // Temporary storage of function value
-/*
+
+    clock_t start, finish;
+    start = clock();
+
+
 
     //Cartesian limits ca infinity:
     double a = -2.3;
@@ -50,18 +72,18 @@ int main()
     cout << integral << "       " << sqrt(variance) << endl;
 
 
-*/
+/*
 
     //Use importance sampling:
 
     double * spher;
     spher = new double [6]; // Contains all spherical coordinates: r1, theta1, phi1, r2, theta2, phi2.
 
-    double pi = 3.14159265359;
+
     double theta_max = pi;
     double phi_max = 2*pi;
 
-    double jacobidet = pi*pi*pi*pi/4;
+    double jacobidet_spher = pi*pi*pi*pi/4;
 
     for (int i=0; i<n; i++){
         spher[0] = ran0(&idum); spher[1] = theta_max*ran0(&idum); spher[2] = phi_max*ran0(&idum);
@@ -72,11 +94,18 @@ int main()
     }
 
     E_f /= ((double) n);
-    double variance = (E_ff/((double) n) - E_f*E_f)*jacobidet*jacobidet/((double)n);
-    double integral = E_f*jacobidet;
-    cout << integral << "       "<< sqrt(variance) << endl;
+    double variance = (E_ff/((double) n) - E_f*E_f)*jacobidet_spher*jacobidet_spher/((double)n);
+    double integral = E_f*jacobidet_spher;
+*/
+
+    finish = clock();
+    infile << n << "      " << integral << "      " << fabs(integral-exact)/exact << "      " <<"       " << sqrt(variance) << "       " <<(((double) finish-start)/CLOCKS_PER_SEC) << endl;
 
 
+
+//    cout << integral << "       "<< sqrt(variance) << endl;
+
+}
     return 0;
 }
 
