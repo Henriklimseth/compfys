@@ -1,0 +1,371 @@
+\documentclass[norsk, 12pt]{article}
+
+\usepackage[T1]{fontenc}    % Riktig fontencoding
+\usepackage[utf8]{inputenc} % Riktig tegnsett
+\usepackage{babel}          % Ordelingsregler, osv
+\usepackage{graphicx}       % Inkludere bilder
+\usepackage{booktabs}       % Ordentlige tabeller
+\usepackage{url}            % Skrive url-er
+\usepackage{textcomp}       % Den greske bokstaven micro i text-mode
+%\usepackage{units}          % Skrive enheter riktig
+\usepackage{float}          % Figurer dukker opp der du ber om
+%\usepackage{lipsum}         % Blindtekst
+\usepackage{amsmath}        % Mattestæsj
+\usepackage{listings}       % Kodetekst
+%\usepackage{lipsum} 	    % Package to generate dummy text throughout this template
+%\usepackage[lined,boxed,commentsnumbered]{algorithm_2e}
+\usepackage{multicol} 	    % Used for the two-column layout of the document
+\usepackage[a4paper,margin=1.0in]{geometry}
+%\usepackage{comment}
+\usepackage{amsfonts}
+\usepackage{parskip}
+
+% Egendefinerte kommandoer
+\newcommand{\f}{\frac}
+\newcommand{\ddr}{\frac{d}{dr}}
+\newcommand{\vr}{\vec{r}}
+
+% JF i margen
+\makeatletter
+\renewcommand{\subsubsection}{\@startsection{subsubsection}{3}{-2cm}%
+{-\baselineskip}{0.5\baselineskip}{\bf\large}}
+\makeatother
+\newcommand{\jf}[1]{\subsubsection*{JF #1}\vspace*{-2\baselineskip}}
+
+% Skru av seksjonsnummerering
+\setcounter{secnumdepth}{-1}
+
+%, trim = 1cm 7cm 1cm 7cm % PDF-filer som bilde
+
+\begin{document}
+
+% Forside
+\begin{titlepage}
+\begin{center}
+
+\textsc{\Large FYS4150 - Computational Physics}\\[0.5cm]
+\rule{\linewidth}{0.5mm} \\[0.4cm]
+{ \huge \bfseries  PROJECT 2}\\[0.10cm]
+\rule{\linewidth}{0.5mm} \\[1.5cm]
+\textsc{\Large }\\[1.5cm]
+\textsc{}\\[1.5cm]
+
+% Av hvem?
+%\begin{minipage}{0.49\textwidth}
+ %   \begin{center} \large
+  %      Henrik Sverre Limseth\\ \url{henrisli@uio.no} \\[0.8cm]
+   % \end{center}
+%\end{minipage}
+%\bigskip \\
+\begin{minipage}{0.49\textwidth}
+    \begin{center} \large
+        Henrik Sverre Limseth\\ \url{henrisli@uio.no} \\[0.8cm]
+    \end{center}
+\end{minipage}
+
+%\vfill
+
+% Dato nederst
+\large{Dato: \today}
+
+\end{center}
+\end{titlepage}
+
+\section{Sammendrag}
+I dette prosjektet skal korrelasjonsenergien mellom to elektroner i et heliumatom beregnes. Problemet ender i et 
+seksdimensjonalt integral som kan løses analytisk. Integralet blir deretter løst med forskjellige numeriske metoder:
+Gauss-Legendre kvadratur, Gauss-Laguerre kvadratur og Monte-Carlo metoder med og uten viktighetsprøvetaking (``importance
+sampling'').
+
+
+All kode som har blitt brukt kan finnes på githubadressen:
+
+https://github.com/Henriklimseth/compfys/tree/master/Project3
+
+\section{Problemet}
+
+For å beregne korrelasjonsenergien mellom to elektroner i et heliumatom må forventningsverdien av potensialet mellom
+dem regnes ut. Første steg er å finne en tilnærming til bølgefunksjonen til elektron-elektronsystemet. Vi antar begge
+elektronene i laveste orbital. Dermed må de to elektronene ha motsatt spinn og den romlige bølgefunksjonen må være
+symmetrisk med hensyn til ombytte av de to elektronene. For ett elektron i denne tilstanden er bølgefunksjonen
+$$\psi(\vr)\propto e^{-\alpha r}$$
+med $r = |\vr| = \sqrt{x^2+y^2+z^2}$ og $\alpha$ er en parameter som skal svare til ladningen til heliumkjernen:
+$\alpha = 2$.
+
+Vi gjetter på at topartikkelbølgefunksjonen er produktet av to ènpartikkelbølgefunksjoner:
+
+$$\Psi (\vr_1, \vr_2) = e^{-2(r_1+r_2)}$$
+(ikke normalisert).
+
+Siden Coloumbpotensialet $V(\vr_1, \vr_2) \propto \f{1}{|\vr_1-\vr_2|}$ vil størrelsen av interesse være
+$$\left\langle\f{1}{|\vr_1-\vr_2|}\right\rangle = \left\langle\Psi\left|\f{1}{|\vr_1-\vr_2|}\right|\Psi\right\rangle
+= \int_{\mathbb{R}^3}d\vr_1d\vr_2e^{-4(r_1+r_2)}\f{1}{|\vr_1-\vr_2|}.$$
+
+Dette integralet kan løses analytisk ved hjelp av et snedig triks: Vi bruker sfæriske koordinater:
+$d\vr = r^2\sin\theta drd\theta d\phi$
+og integrerer først over $\vr_2$ (mens vi holder $\vr_1$ konstant) og velger koordinatsystem slik at
+$z_2$-aksen er parallell med $\vr_1$. På denne måten blir vinkelen mellom $\vr_1$ og $\vr_2$ lik $\theta_2$ og 
+$$|\vr_1-\vr_2| = \sqrt{r_1^2+r_2^2-2r_1r_2\cos\theta_2}.$$
+Vi får:
+
+\begin{align*}
+ \left\langle\f{1}{|\vr_1-\vr_2|}\right\rangle&=2\pi\int d\vr_1\left\{\int\limits_0^\infty\int\limits_0^\pi dr_2d\theta_2e^{-4(r_1+r_2)}\f{r_2^2\sin\theta_2}{\sqrt{r_1^2+r_2^2-2r_1r_2\cos\theta_2}} \right\} \\
+ &= 2\pi\int d\vr_1\left\{\int\limits_0^\infty dr_2e^{-4(r_1+r_2)}\f{r_2}{r_1}\left(\sqrt{r_1^2+r_2^2+2r_1r_2}-\sqrt{r_1^2+r_2^2-2r_1r_2}\right)\right\}\\
+ &= 2\pi\int d\vr_1\left\{\int\limits_0^\infty dr_2e^{-4(r_1+r_2)}\f{r_2}{r_1}\left(|r_1+r_2|-|r_1-r_2|\right)\right\}\\
+ &= 4\pi\int d\vr_1e^{-4r_1}\left\{\f{1}{r_1}\int\limits_0^{r_1}dr_2e^{-4r_2}r_2^2 + \int\limits_{r_1}^\infty dr_2e^{-4r_2}r_2\right\}\\
+ &= 4\pi\int d\vr_1\left\{\f{1}{32r_1}e^{-4r_1}-\f{1}{32r_1}e^{-8r_1}-\f{1}{16}e^{-8r_1}\right\}\\
+ &= 4\pi\int\limits_0^\infty\int\limits_0^\pi\int\limits_0^{2\pi}d\phi d\theta dr\sin\theta\left(\f{1}{32}re^{-4r}-\f{1}{32}re^{-8r}-\f{1}{16}r^2e^{-8r}\right)\\
+ &= \f{\pi^2}{2}\int\limits_0^\infty dr\left(re^{-4r}-re^{-8r}-2r^2e^{-8r}\right)\\
+ &= \f{\pi^2}{2}\left(\f{1}{16}-\f{1}{64}-\f{1}{128}\right)\\
+ &= \f{5\pi^2}{16^2}.
+\end{align*}
+
+Så vi har noe å sammenlikne de numeriske resultatene med.
+
+\section{Numeriske metoder}
+\subsection{Gaussisk kvadratur}
+Vi tilnærmer et integral
+$$ I = \int_a^bf(x)dx \approx \sum\limits_{i=1}^Nw_if(x_i)$$
+I integrasjonsmetoder basert på Taylorrekker vil man ut ifra antall punkter man vil bruke ($N$) bestemme enhver $x_i$
+ved at $x_i = a + \f{b-a}{N}\cdot i$, mens $w_i$ bestemmes ut ifra hvilken metode man bruker.
+
+Med Gaussisk kvadratur vil man bestemme både $x_i$ og $w_i$ optimalt ved at man ikke krever uniformt fordelte $x_i$
+mellom $a$ og $b$. Dermed får man $2N$ parametere å jobbe med i  Gaussisk kvadratur, i motsetning til $N$ i Taylorrekkemetoder.
+Dette medfører at mens Taylorrekkemetoder integrerer nøyaktig polynomer av orden $N-1$ kan metoder basert på
+Gaussisk kvadratur integrere nøyaktig polynomer av orden $2N-1$, selv om vi bare jobber med $N$ $x$-verdier. Dette
+medfører større nøyaktighet siden et høyere grads polynom bedre vil kunne tilnærme funksjonen vi ønsker å integrere:
+$$\int f(x)dx\approx \int P_{2N-1} = \sum\limits_{i=1}^{N} P_{2N-1}(x_i)w_i$$
+er mer nøyaktig enn
+$$\int f(x)dx\approx \int P_{N-1} = \sum\limits_{i=1}^{N} P_{N-1}(x_i)w_i.$$
+
+Ideen videre bygger på bruk av ortogonale polynomer for å bestemme vektene og punktene.
+
+\subsection{Gauss-Legendre}
+Legendrepolynomene $L_k(x)$ er ortogonale polynomer definert på $[-1, 1]$. De er løsninger av differensiallikningen
+$$C(1-x^2)f(x)+(1-x^2)\f{d}{dx}\left((1-x^2)\f{df}{dx}\right)=0$$
+hvor $C$ er en konstant og er gitt ved Rodrigues' formel:
+$$L_k(x) = \f{1}{2^kk!}\f{d^k}{dx^k}(x^2-1)^k,\ \ \ \ \ k\in\mathbb{N}$$
+med $L_0(x) = 1$.
+
+Ortogonaliteten er gitt ved:
+$$\int\limits_{-1}^1 L_i(x)L_j(x)dx = \f{2}{2i+1}\delta_{ij}$$
+
+Disse polynomene kan brukes for å finne vekter og integrasjonspunkter (for integraler mellom -1 og 1) på følgende måte:
+Vi tilnærmer $f(x) \approx P_{2N-1}(x)$. Ved en polynomdivisjon på $L_N(x)$ gir dette
+$$P_{2N-1}(x) = L_N(x)P_{N-1}(x)+Q_{N-1}(x)$$
+
+hvor $P_{N-1}$ og $Q_{N-1}(x)$ er polynomer av grad $\leq N-1$.
+
+Siden $\left\{L_k(x)\right\}_{k=0}^{k=N-1}$ er ortogonale spenner de ut det $(N-1)$'te polynomrommet, så vi kan skrive
+
+\begin{align}
+ P_{N-1}(x) &= \sum\limits_{j=0}^{N-1}\beta_j L_j(x)\\
+ Q_{N-1}(x) &= \sum\limits_{i=0}^{N-1}\alpha_i L_i(x)
+\end{align}
+
+Siden $L_0(x) = 1$ og ved ortogonalitetsrelasjonen får vi dermed
+
+$$\int\limits_{-1}^1 P_{2N-1}(x) = 2\alpha_0$$
+
+og hele integrasjonsproblemet er redusert til å finne koeffisienten $\alpha_0$ for $Q_{N-1}(x)$ uttrykt i
+Legendrepolynombasis.
+
+Videre har vi at ved nullpunktene til $L_N(x)$, $\left\{x_k\right\}_{k=0}^{N-1}$ må
+$P_{2N-1}(x_k) = Q_{N-1}(x_k)$, altså er disse verdiene for $Q_{N-1}(x)$ kjente.
+Vi får dermed et likningssett for $\left\{\alpha_i\right\}$:
+$$Q_{N-1}(x_k) = \sum\limits_{i=0}^{N-1}\alpha_i L_i(x_k) = \sum_{i=0}^{N-1}\alpha_i L_{ik},\ \ \ k = 0,1,\dots ,N-1$$
+
+som kan omskrives til matriselikningen
+$$\vec Q = L\vec\alpha \Leftrightarrow \vec \alpha = L^{-1}\vec Q$$
+hvor $L$ er matrisa med $L_ik$ som elementer, $\vec Q$ er vektoren med $Q_{N-1}(x_k)$ som elementer og
+$\vec \alpha$ er vektoren med $\alpha_i$ som elementer. Siden polynomene $L_i$ er ortogonale kan ingen av kolonnene
+i $L$ være lineært avhengige av de andre, så $L$ er invertibel.
+
+Fra matriselikningen er det klart at $\alpha_0 = \sum\limits_{i=0}^{N-1}(L^{-1})_{0i}Q_{N-1}(x_i)$, og dermed må
+$$\int\limits_{-1}^1f(x)dx \approx 2\sum\limits_{i=0}^{N-1}(L^{-1})_{0i}P_{2N-1}(x_i).$$
+Så vi bestemmer vektene som $w_i=2(L^{-1})_{0i}$ og integrasjonspunktene som nullpunktene til $L_N(x)$, $x_i$.
+
+For å anvende Gauss-Legendre kvadraturen på et generelt intervall $[a,b]$ utfører vi bare substitusjonen:
+$$t = \f{b-a}{2}x+\f{b+a}{2}$$ slik at
+$$\int\limits_a^bf(t)dt = \f{b-a}{2}\int\limits_{-1}^1f(t(x))dx.$$
+
+I vårt tilfelle er grensene $\pm\infty$, men siden integranden dør raskt ut for økende avstand fra origo velger vi bare
+å integrere innenfor et stort nok endelig intervall. Funksjonen $gauleg$ i biblioteket $lib.cpp$ ble brukt for å regne
+ut alle integrasjonspunkter og vekter.
+
+Vi løser det seksdimensjonale integralet i kartesiske koordinater med Gauss-Legendre kvadratur. Steg èn er å finne
+verdier som kan tilnærmes med uendelig, så vi studerer når integranden er tilnærmet null:
+$$e^{-4(r_1+r_2)} \sim e^{-8r} = 10^{-8} \Rightarrow r = \ln10\approx2.3$$
+
+
+\begin{figure}
+ \centering
+ \includegraphics[scale=0.7]{integrandplot.png}
+ \caption{Omtrentlig størrelse på integranden som funksjon av avstand fra origo for èn koordinat.
+ Punktet $x=2.3$ er merket av.}
+\end{figure}
+
+Som vi ser av figur 1 er $2.3\approx\infty$ en gyldig tilnærming. 
+
+Deretter brukes funksjonen $gauleg$ til å finne vekter og integrasjonspunkter og integralet beregnes ved en
+seksdobbel sum, en over hver koordinat/vekt.
+Tabell 1 viser resultatene fra denne metoden.
+
+\begin{table}
+ \centering
+ \begin{tabular}{|c|c|c|c|}\hline
+ n &Beregning &Relativ feil &Tid [s] \\ \hline
+ 10      &0.11204       &0.418774      &0.18\\
+ 15      &0.208919      &0.0837953      &1.91\\
+ 20      &0.172009      &0.107678      &10.65\\
+ 25      &0.190286      &0.0128633      &40.24\\
+ 30      &0.183952      &0.0457216      &119.88\\ \hline
+  
+ \end{tabular}
+\caption{Resultater for Gauss-Legendre kvadratur. Relativ feil er beregnet som |eksakt-numerisk|/eksakt.}
+\end{table}
+
+Det er slående at økning i $n$ ikke nødvendigvis medfører høyere nøyaktighet. Tiden går også rett til værs veldig fort,
+uten imponerende nøyaktighet i tilnærmingen.
+
+\subsection{Gauss-Laguerre}
+Laguerrepolynomene $\ell_k(x)$ er løsningene av differensiallikningen
+$$\left(\f{d^2}{dx^2}-\f{d}{dx}+\f{\lambda}{x}-\f{l(l+1}{x^2}\right)f(x)=0$$
+med $l\in\mathbb{N}\cup\{0\}$ og $\lambda$ en konstant.
+De kan defineres ved Rodrigues' formel:
+$$\ell_k(x)=\f{e^x}{k!}\f{d^k}{dx^k}\left(e^{-x}x^k\right),\ \ \ \ k\in \mathbb{N}$$
+med $\ell_0(x) =1$ og oppfyller ortogonalitetsrelasjonen
+$$\int\limits_0^\infty e^{-x}\ell_i(x)\ell_j(x)dx = \delta_{ij}$$
+Disse egner seg dermed godt for integrander $f$ som kan omskrives $f(x) = e^{-x}g(x)$ med integrasjonsgrenser
+$0$ og $\infty$ av liknende argumenter som gitt for Gauss-Legendre kvadraturen med indreproduktet
+$$\langle s(x)|r(x)\rangle = \int\limits_0^\infty e^{-x}s(x)r(x)dx.$$
+
+Mer generelt egner de seg også for integrander som kan skrives på formen $f(x) = x^\alpha e^{-x}g(x)$.
+
+I vårt tilfelle bytter vi til sfæriske koordinater og kan dermed trekke en faktor $r_i^2e^{-4r_i}$ ut av integranden for $i=1,2$.
+Vi substituerer $u_i = 4r_i$ for å få den ønskede formen, hvilket gir oss en normeringsfaktor på $\f{1}{4^5}$.
+Vi bruker Gauss-Legendre kvadratur på de angulære integralene og Gauss-Laguerre på de radielle. Dette kan nok en gang
+implementeres som en seksdobbel sum.
+
+Tabell 2 viser resultatene for denne metoden.
+
+
+\begin{table}[h!]
+ \centering
+ \begin{tabular}{|c|c|c|c|}\hline
+ n &Beregning &Relativ feil &Tid [s] \\ \hline
+ 10      &0.186457      &0.0327256      &0.14\\
+ 15      &0.189759      &0.0155978      &1.59\\
+ 20      &0.191082      &0.00873564      &8.77\\
+ 25      &0.191741      &0.00531718      &33.74\\
+ 30      &0.192114      &0.00338234      &100.91\\ \hline
+  
+ \end{tabular}
+\caption{Resultater for Gauss-Laguerre kvadratur. Relativ feil er beregnet som |eksakt-numerisk|/eksakt.}
+\end{table}
+
+Vi ser at allerede ved $n=15$ er disse beregningene omtrent så nøyaktige som Gauss-Legendre metoden klarer å bli og i
+tillegg synker den relative feilen som funksjon av $n$. For $n=20$ er den mer nøyaktig enn Gauss-Laguerre er for noen $n$
+og kun på 8.77 sekunder, langt raskere enn forrige metode. Allikevel konvergerer denne tregt. For høyere $n$ vokser
+tiden algoritmen bruker raskt og når den bruker 100 sekunder er den fortsatt bare nøyaktig til tredje desimal.
+
+Det er ikke rart at tiden øker raskt med økende $n$ ettersom vi utfører en seksdobbel sum over $n$.
+
+Det er også verdt å merke seg mulige problemer med nevneren i integranden i tilfellet med sfæriske koordinater. Siden
+vi må bruke
+$$|\vr_1-\vr_2| = \sqrt{r_1^2+r_2^2-2r_1r_2\cos\beta}$$
+med $$\cos\beta = \cos\theta_1\cos\theta_2 +\sin\theta_1\sin\theta_2\cos(\phi_1-\phi_2)$$
+ettersom det er vanskelig å implementere trikset som brukes i den analytiske utregningen når vi må gjøre alle integralene
+på en gang. Når $\cos\beta = 1$ og $r_1$ er lik $r_2$ skal argumentet til kvadratroten bli null. Dessverre jobber vi med
+numeriske flyttall, så argumentet kan lett bli et bitte lite negativt tall og utregningen vil gi $nan$. Dette kan løses
+ved å innføre en $if$-test som setter integranden til null hver gang argumentet til kvadratroten blir mindre enn
+en liten $\epsilon>0$.
+
+\subsection{Monte-Carlo}
+Hvis integranden kan faktoriseres $f(x) = p(x)g(x)$ hvor $p(x)$ kan tolkes som en sannsynlighetsfordeling (dvs. er normaliserbar
+og positiv mellom integrasjonsgrensene) vil det å finne
+integralet av $f(x)$ tilsvare å finne forventningsverdien til $g$ under sannynlighetsfordelingen $p$:
+$$I = \int f(x)dx = \int p(x)g(x) dx = \langle g \rangle.$$
+
+Monte-Carlometoden går ut på å trekke $N$ tilfeldige $p$-fordelte tall for å gi et estimat:
+$$\langle g\rangle_N = \sum\limits_{i=1}^Ng(x_i)p(x_i)$$
+og gjøre dette $M$ ganger for å beregne
+$$\langle I\rangle_M = \f{1}{M}\sum\limits_{i=1}^{M}\langle g\rangle_{N,i}$$
+
+som vil konverge mot $I$ når $M\rightarrow \infty$ ved store talls lov.
+
+Med ``Brute force'' Monte-Carlo beholder vi integranden som den er og lar $p(x)=1$ være den uniforme fordelingen
+på $[0,1]$. For generelle intervaller gjennomfører vi en substitusjon som før.
+
+I vårt tilfelle kjører vi for kartesiske koordinater. Velger $2.3\approx\infty$ som før og substituerer enhver koordinat
+$x_i = -2.3+4.6t_i$ hvor $t_i$ er trukket fra den uniforme fordelingen på $[0,1]$. Dette medfører en jacobideterminant
+på $(4.6)^6$. Tabell 3 viser resultatene fra denne metoden.
+
+
+\begin{table}[h!]
+ \centering
+ \begin{tabular}{|c|c|c|c|c|}\hline
+ n &Beregning &Relativ feil &Standardavvik &Tid [s] \\ \hline
+1000      &0.152286      &0.209997             &0.0667105       &0\\
+10000      &0.167583      &0.13064             &0.0705365       &0\\
+100000      &0.214741      &0.114002             &0.0487582       &0.03\\
+1000000      &0.190043      &0.0141255             &0.00971044       &0.21\\
+10000000      &0.18422      &0.0443322             &0.00382728       &2.15\\ \hline
+  
+ \end{tabular}
+\caption{Resultater for Brute force Monte-Carlo. Tidsoppløsningen er kun på 0.01s.}
+\end{table}
+
+Denne metoden er også ustabil da vi ser at den relative feilen øker fra $n=10^6$ til $n=10^7$. Til gjengjeld er den
+veldig rask!
+
+
+Med ``Importance sampling'' trekker vi ut en sannsynlighetsfordeling fra integranden og gjennomfører en substitusjon
+slik at vi fortsatt kan trekke tilfeldige tall i $[0,1]$.
+
+I vårt tilfelle er det mest naturlig å bruke sfæriske koordinater og trekke ut eksponensialfordelingen for de radielle
+integralene mens vi holder oss til ``Brute force''-metoden for de angulære integralene.
+
+Vi lar $u_i = 4 r_i$ for å normere eksponensialfunksjonene og substituerer deretter
+$$u_i = -\ln(1-x_i) \Leftrightarrow x_i = 1-e^{-u_i}$$
+slik at $u_i\in[0,\infty)$ når $x_i\in[0,1)$ og $dx_i = e^{-u_i}du_i$.
+
+Med substitusjonene $\theta_i = 2\pi t_i$ og $\phi_i = \pi s_i$ så $t_i, s_i\in[0,1]$ blir jacobideterminanten
+$$\f{\pi^4}{4}e^{-(u1+u2)}.$$
+
+Tabell 4 viser resultatene for denne metoden.
+
+
+\begin{table}[h!]
+ \centering
+ \begin{tabular}{|c|c|c|c|c|}\hline
+ n &Beregning &Relativ feil &Standardavvik &Tid [s] \\ \hline
+1000      &0.15921      &0.174076             &0.0159906       &0\\
+10000      &0.195697      &0.0152061             &0.00938424       &0\\
+100000      &0.191029      &0.00900808             &0.00312452       &0.03\\
+1000000      &0.19335      &0.00303307             &0.00103123       &0.3\\
+10000000      &0.192846      &0.000414082             &0.000328002       &2.95\\ \hline
+ \end{tabular}
+\caption{Resultater for Monte-Carlo med Importance sampling. Tidsoppløsningen er kun på 0.01s.}
+\end{table}
+
+Vi ser at resultatene er de mest nøyaktige av alle metodene og i tillegg er denne bare strået tregere enn Brute force
+Monte-Carlo, langt raskere enn kvadraturmetodene!
+
+\section{Konklusjon}
+Monte-Carlo metodene var langt raskere enn kvadraturmetodene. Dette er utvilsomt fordi man slipper en seksdobbel løkke
+i Monte-Carlo. Det fører også til at man kan øke $n$ betraktelig og få veldig nøyaktige resultater. Det hadde vært gøy
+å regne ut ``variansen'' til integranden analytisk:
+$$\sigma^2 = \int f(\vr_1, \vr_2)^2 d\vr_1d\vr_2 - \left(\int f(\vr_1, \vr_2) d\vr_1d\vr_2\right)^2.$$
+Dette for å sammenlikne hvor nøyaktig vi får beregnet standardavviket som er et nyttig mål på feilen vi gjør.
+Jeg tror det er mulig og kom ganske langt ved hjelp av meget snedige triks, men det ble dessverre ikke tid til å fullføre.
+
+
+For den fysiske problemstillingen vi jobber med er tilnærmingen til bølgefunksjonen ikke ideell. Den tar ikke
+hensyn til at sannsynligheten burde være null for $r_1=r_2$, men har derimot toppunkt for $r_1=r_2=0$ hvilket ikke
+er en lovlig tilstand. Det kunne vært interessant å prøve med bølgefunksjonstilnærminger som tar hensyn til at elektronene
+frastøter hverandre og sjekke hvor mye de resultatene avviker fra de vi har funnet her. Det kan også være interessant
+å sjekke med eksperimentelle data for å finne ut hvor nær den faktiske verdien vi kom med denne enkle tilnærmingen
+til topartikkelbølgefunksjonen.
+
+\end{document}
