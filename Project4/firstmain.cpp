@@ -16,36 +16,41 @@ ofstream outfile2;
 
 int main()
 {
-    double T = 1.0;                       // Dimensionless temperature
-    long E = 0;                            // Dimensionless energy
-    long M = 0;                            // Magnetization
-    long L = 2;                            // Lattice dimension (LxL)
-
-    long idum = -1;
 
 
-    double* w;                            //Holds all five possible transition probabilities for the 2D Ising model
-    w = new double[17];
-    w[0]=exp(8*T); w[4]=exp(4*T); w[8] = 1.0; w[12] = exp(-4*T); w[16] = exp(-8*T);
-
-    int **spins;                         // Holds all spin values
-    spins = new int*[L];
-    for (int i=0; i<L;i++){
-        spins[i] = new int[L];
-    }
-
-    outfile2.open("noeannet.txt");
+    outfile2.open("sistesjekk2x2.txt");
     outfile2 << "MC cycles" << "        " << "E" << "           " << "M"<< "         " << "|M|"<< "         " << "C_V" << "        " << "X" << endl;
 
 
     for(int k=2; k<=10; k++){
 
+        double T = 1.0;                       // Dimensionless temperature
+        long E = 0;                            // Dimensionless energy
+        long M = 0;                            // Magnetization
+        long L = 2;                            // Lattice dimension (LxL)
+
+        long idum = -1;
+
+
+        double* w;                            //Holds all five possible transition probabilities for the 2D Ising model
+        w = new double[17];
+        w[0]=exp(8*T); w[4]=exp(4*T); w[8] = 1.0; w[12] = exp(-4*T); w[16] = exp(-8*T);
+
+        int **spins;                         // Holds all spin values
+        spins = new int*[L];
+        for (int i=0; i<L;i++){
+            spins[i] = new int[L];
+        }
+
+
+
+
     long MC_cycles = pow(10, k);
 
-
+//    long MC_cycles = pow(10,4);
 
 //    ofstream outfile1;
-//    outfile1.open("testing.txt");
+//    outfile1.open("energy2x2.txt");
 
 
     long *average;                         // Holds computed average values for E, E^2, M, M^2 and |M|.
@@ -60,23 +65,20 @@ int main()
 //    cout << M << endl;
 
 // Setting up thermalization loop
-    long x;
+    long x=0;
     int n=1;
     long E_av = E;
     long E_av_temp = 0;
 
     int m;
-    if(k<=3){
+    if(k<=4){
         m = 10;
     }
-    else if(k<=5){
+    else if(k==5){
         m=100;
     }
-    else if(k<=8){
-        m=1000;
-    }
     else{
-        m=10000;
+        m=1000;
     }
 
 // Loop for thermalization, not collecting data
@@ -93,14 +95,14 @@ int main()
             n += 1;
 
         }
+//        cout << x << endl;
     }
-    cout << x << endl;
 
 // Loop after thermalization, collecting data
     for(long y=x; y< MC_cycles; y++){
         metropolis(L, idum, spins, E, M, w);
         average[0] += E; average[1] += E*E; average[2] += M; average[3] += M*M; average[4] += fabs(M);
-        E_av += E;
+//        E_av += E;
 //        if(y==n*1000){
 //            outfile1 << ((double)E_av)/((double)n*1000) << endl;
 //            n += 1;
