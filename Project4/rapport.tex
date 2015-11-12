@@ -1,0 +1,330 @@
+\documentclass[english, 12pt]{article}
+
+\usepackage[T1]{fontenc}    % Riktig fontencoding
+\usepackage[utf8]{inputenc} % Riktig tegnsett
+\usepackage{babel}          % Ordelingsregler, osv
+\usepackage{graphicx}       % Inkludere bilder
+\usepackage{booktabs}       % Ordentlige tabeller
+\usepackage{url}            % Skrive url-er
+\usepackage{textcomp}       % Den greske bokstaven micro i text-mode
+\usepackage{units}          % Skrive enheter riktig
+\usepackage{float}          % Figurer dukker opp der du ber om
+\usepackage{lipsum}         % Blindtekst
+\usepackage{amsmath}        % Mattestæsj
+\usepackage{listings}       % Kodetekst
+\usepackage[a4paper,margin=1.0in]{geometry}
+\usepackage{physics}
+\usepackage{parskip}
+\usepackage{amsfonts}
+
+
+% Egendefinerte kommandoer
+\newcommand{\f}{\frac}
+\renewcommand{\dd}{\partial}
+
+
+
+% JF i margen
+%\makeatletter
+%\renewcommand{\subsubsection}{\@startsection{subsubsection}{3}{-2cm}%
+%{-\baselineskip}{0.5\baselineskip}{\bf\large}}
+%\makeatother
+%\newcommand{\jf}[1]{\subsubsection*{JF #1}\vspace*{-2\baselineskip}}
+
+% Skru av seksjonsnummerering
+%\setcounter{secnumdepth}{-1}
+
+%, trim = 1cm 7cm 1cm 7cm % PDF-filer som bilde
+
+\begin{document}
+
+% Forside
+\begin{titlepage}
+\begin{center}
+
+\textsc{\Large FYS4150}\\[0.5cm]
+\rule{\linewidth}{0.5mm} \\[0.4cm]
+{ \huge \bfseries  Project 4}\\[0.10cm]
+\rule{\linewidth}{0.5mm} \\[1.5cm]
+\textsc{\Large }\\[1.5cm]
+\textsc{}\\[1.5cm]
+
+% Av hvem?
+%\begin{minipage}{0.49\textwidth}
+ %   \begin{center} \large
+  %      Henrik Sverre Limseth\\ \url{henrisli@uio.no} \\[0.8cm]
+   % \end{center}
+%\end{minipage}
+%\bigskip \\
+\begin{minipage}{0.49\textwidth}
+    \begin{center} \large
+        Candidate number  \\[0.8cm]
+    \end{center}
+\end{minipage}
+
+
+\vfill
+
+% Dato nederst
+\large{Dato: \today}
+
+\end{center}
+\end{titlepage}
+
+\section*{Abstract}
+
+In this project we will study the properties and phase transitions of a ferromagnet using the Ising model in two dimensions without an external magnetic field.
+
+
+\section{Theory}
+\subsection{The Canonical Ensemble}
+We work in the canonical ensemble where the the probability distribution over microstates is given by the Boltzmann distribution
+$$P_i(\beta) = \f{e^{-\beta E_i}}{Z}$$
+
+where $\beta = \f{1}{k_BT}$ and $E_i$ is the energy of the microstate $i$. $Z$ is the partition function of the system, defined as
+$$Z = \sum\limits_{i=1}^Ne^{-\beta E_i} = \sum\limits_{i=1}^K\Omega(E_i)e^{-\beta E_i}$$
+where we sum over all microstates, meaning $N$ is the total number of microstates of the system, $K$ is the number of different energies the system may have and $\Omega(E_i)$ is the degeneracy of those energies. Knowing all possible microstate energies and their degeneracies we can calculate the partition function and by extension we will know the Boltzmann distribution. Given the Boltzmann distribution we can calculate the properties of the system, like the mean energy:
+
+$$\langle E\rangle = \sum\limits_{i=1}^NE_iP_i(\beta) = \f{1}{Z}\sum\limits_{i=1}^NE_ie^{-\beta E_i} = -\f{\partial \ln Z}{\partial \beta}$$
+
+
+the specific heat:
+$$C_V = k_B\beta^2\sigma_E^2 = k_B\beta^2(\langle E^2\rangle-\langle E\rangle^2) =  k_B\beta^2\left(\sum\limits_{i=1}^NE_i^2P_i(\beta) - \left(\sum\limits_{i=1}^NE_iP_i(\beta)\right)^2\right) = -k_B\beta^2\f{\partial \langle E\rangle}{\partial \beta}$$
+
+the  mean value of the absolute value of the magnetization:
+
+$$\langle |M|\rangle = \sum\limits_{i=1}^N|M_i|P_i(\beta)$$
+
+and the susceptibility:
+$$\chi = \beta\sigma_{|M|}^2 =\beta(\langle M^2\rangle - \langle M\rangle^2) =  \beta\left(\sum\limits_{i=1}^NM_i^2 - \left(\sum\limits_{i=1}^N|M_i|\right)^2\right)$$
+
+which are the quantities we will be focusing on in this project.
+
+Note that we are only calculating the susceptibility using the mean of the absolute value of the magnetization and not the magnetization itself. Due to the symmetry of the problem $\langle M\rangle$ will always be zero. This will not, however, always be the case in the numerical computation. Here the magnetization may do abrupt jumps from its maximum negative to its maximum positive value (and vice versa), without changing the energy of the system. This is a finite lattice effect and to avoid it, we simply replace $M$ with its absolute value.
+
+\subsection{The Ising Model}
+We start by modeling a magnet as a collection of spins where each spin can be in either an up-state or down-state.
+In the Ising model only neighboring spins interact so that the energy can be expressed as
+$$E = -J\sum\limits_{<kl>}^Ss_ks_l - B\sum_{k=1}^{S}s_k$$
+
+Where $<kl>$ means we are only summing over neighboring spins. Each spin can be in spin-up or spin-down state, so $s_k=\pm1$. $S$ is the total number of spins, $B$ represents an external magnetic field and $J$ is a coupling constant. In our case, we thus have $B=0$ as there is no external magnetic field and $J>0$ since this means it will be energetically favorable for neighboring spins to be aligned, corresponding to the case of a ferromagnet. We will also only study the situation in two dimensions, placing the spins in a square lattice of finite dimension $L$, so the expression for the energy of the system can be rewritten
+$$E = -J\sum\limits_{<kl>}^{L\times L}s_ks_l$$ with $J>0$.
+
+In this project we will work with periodic boundary conditions, meaning that the spins located on the edge of lattice interact with each other. If we label the spins $s_{i,j}$ where $i$ and $j$ corresponds to row and column placement of the spin respectively, $0\leq ij\leq L$ we can visualize the lattice like this:
+
+$$\begin{matrix} & \vline &  s_{L1}  & s_{L2} & \dots & s_{LL}& \vline & \\ \hline
+s_{1L} & \vline & s_{11} & s_{12} & \dots & s_{1L}& \vline & s_{11}\\
+s_{2L} & \vline & s_{21} & s_{22} & \dots & s_{2L} & \vline & s_{21} \\
+\vdots & \vline & \vdots & \vdots & \ddots & \vdots & \vline & \vdots \\
+s_{LL} & \vline & s_{L1} & s_{L2} & \dots & s_{LL}& \vline & s_{L1} \\ \hline
+ & \vline & s_{11} & s_{12} & \dots & s_{1L} & \vline & \end{matrix}$$
+
+Where the center corresponds to the actual lattice and the edges illustrate how the boundary of the actual lattice interacts. Each spin interacts with the spins immediately next to it.
+
+With this visualization it is easy to get a more practical expression for the energy for use in numerical computations. By traversing the lattice spins and look at interactions with the spin directly behind and directly below the current spin we count every interaction and avoid double counting. The energy can thus be expressed as:
+
+\begin{align*}
+ E &= -J\sum\limits_{<(ij)(kl)>}s_{ij}s_{kl}\\
+ &= -J\left(s_{11}(s_{1L}+s_{21}) + s_{12}(s_{11}+s_{22}) + \dots +s_{ij}(s_{p(i+1)j} +s_{ip(j-1)})+\dots\right) \\
+ &= -J\sum\limits_{i,j} s_{ij}(s_{p(i+1)j} +s_{ip(j-1)})
+\end{align*}
+
+Where
+$$p(i) = \Bigg\{ \begin{matrix}
+L, & i=0 \\ 0, & i=L+1 \\  i, & \text{else} \end{matrix}$$
+
+\subsection{Analytical Approach to the L=2 Case}
+For a lattice size $L=2$ the system only contains four spins, which can be in two possible states each, so we only get 16 possible microstates. Then we can easily calculate the partition function by examining the possible microstates. This will serve as a test of the accuracy of the numerical algorithm which also will be applicable to larger lattices.
+
+We thus want to calculate the mean energy, absolute value magnetization, specific heat and susceptibility for this system analytically.
+
+Labelling the spins $s_i,\ i= 1,2,3,4 $ and imposing periodic boundary conditions we get the lattice:
+
+$$\begin{matrix} & \vline & s_3  & s_4 & \vline & \\ \hline
+s_2 & \vline & s_1 & s_2 & \vline & s_1 \\
+s_4 & \vline & s_3 & s_4 & \vline & s_3 \\ \hline
+ & \vline & s_1 & s_2 & \vline & \end{matrix} $$
+
+which makes it easy to see that the energy is given by
+
+\begin{align*}
+E &= -J(s_1(s_2+s_3) + s_2(s_1+s_4) + s_3(s_4+s_1) + s_4(s_3+s_2))\\
+&= -2J(s_1s_2 + s_1s_3+s_2s_4+s_3s_4)
+\end{align*}
+
+Thus the possible microstates with corresponding energies and magnetizations are given in Table 1.
+
+\begin{table}[hbt!]
+\centering
+\begin{tabular}{|c|c|c|}
+ Configuration ($s_1s_2s_3s_4$) & Energy ($E$) & Magnetization ($M$) \\ \hline
+$++++$ & -8J & 4 \\
+$+++-$ & 0 & 2 \\
+$++-+$ & 0 & 2 \\
+$+-++$ & 0 & 2 \\
+$-+++$ & 0 & 2 \\
+$++--$ & 0 & 0 \\
+$+-+-$ & 0 & 0 \\
+$-++-$ & 8J & 0 \\
+$-+-+$ & 0 & 0 \\
+$--++$ & 0 & 0 \\
+$+--+$ & 8J & 0 \\
+$+---$ & 0 & -2 \\
+$-+--$ & 0 & -2 \\
+$--+-$ & 0 & -2 \\
+$---+$ & 0 & -2 \\
+$----$ & -8J & -4 \\
+\end{tabular}
+\caption{All possible microstates of the $2\times2$ spin lattice. ''$+$'' denotes spin up and ''$-$'' spin down.}
+\end{table}
+
+The partition function is then 
+$$Z = \sum\limits_{i=1}^{16}e^{-\beta E_i} = 2e^{8J\beta} +2e^{-8J\beta}+12
+= 4\cosh(8J\beta) +12$$
+
+giving us the mean energy:
+
+$$\langle E\rangle = -\f{\dd \ln Z}{\dd\beta} = -\f{8J\sinh(8J\beta)}{\cosh(8J\beta) + 3}$$
+
+the specific heat:
+
+$$C_V = -k_B\beta\f{\dd\langle E\rangle}{\dd\beta} = k_B(8J\beta)^2\f{1+3\cosh(8J\beta)}{(3+\cosh(8J\beta))^2}$$
+
+the mean value of the absolute value of the magnetization:
+
+$$\langle|M|\rangle = \f{1}{Z}\sum\limits_{i=1}^{16}|M_i|e^{-\beta E_i} = \f{1}{Z}\left(8e^{8\beta J}+16\right) = \f{2e^{8\beta J}+4}{\cosh(8\beta J)+3}$$
+
+the mean value of the magnetization squared:
+
+$$\langle M ^2\rangle = \f{1}{Z}\sum\limits_{i=1}^{16}M_i^2e^{-\beta E_i} = \f{1}{Z} \left(16e^{8\beta J} + 4\cdot 2^2+4\cdot(-2)^2+16E^{8\beta J}\right) = \f{8e^{8\beta J} + 8}{\cosh(8\beta J) + 3}$$
+
+and the susceptibility:
+\begin{align*}
+\chi &= \beta(\langle M^2\rangle - \langle M\rangle^2) \\
+&= \beta\f{4e^{16\beta J} +4 +4e^{8\beta J} + 4e^{-8\beta J} + 24e^{8\beta J} +24 -4e^{16\beta J} - 16e^{8\beta J}-16}{(\cosh(8\beta J)+3)^2}\\
+&= 4\beta \f{4\cosh(8\beta J) + 2\sinh(8\beta J) +3}{(\cos(8\beta J) +3) ^2}.
+\end{align*}
+
+\section{The Metropolis Algorithm}
+For larger lattices, calculating the partition function quickly becomes rather cumbersome as the number of spins goes as $L^2$ and each spin can have one of two different values ($\pm1$), giving a total of $2^{L^2}$ possible microstates of the system.
+
+We thus resort to numerical solutions of the problem, in this case the Metropolis algorithm. This algorithm simulates the statistical fluctuations of the Ising model on its way to thermal equilibrium (thermalization) and during thermal equilibrium. The beauty of it is that we do not need to calculate the partition function as this algorithm only deals with relative probabilities (quotients of the Boltzmann factors $\exp(\beta E_i)$).
+
+The Metropolis algorithm is as follows:
+
+1. Start with a random initial configuration of the spin lattice.
+
+2. Change the configuration by flipping one of the spins.
+
+3. Calculate the energy difference, $\Delta E$, of these microstates.
+
+4. If $\Delta E\leq 0$: accept the new configuration and go to step 7.
+
+5. If $\Delta E>0$: let $w = e^{-\beta\Delta E}$ and $r\in[0,1]$ be a randomly generated number.
+
+6. If $w\geq r$, accept the new configuration, if not we keep the old one.
+
+7. Update the various expectation values we want to calculate.
+
+8. Repeat step 1.-7. until we have a sufficienty good representation of states.
+
+9. Divide all expectation values with the number of Monte Carlo cycles (the number of times we sweep through the lattice) and, if desirable, by the number of spins to get the expected values per spin.
+
+In this way we will approach an energy minimum at given temperature whilst experiencing fluctuations and when the minimum is reached we continue to have fluctuations about it, simulating the real deal.
+
+To our case of a two dimensional lattice, a few simplifications can be made. First of all, the number of possible values of $\Delta E$ is limited. Looking at one spin which is about to get flipped, there are only five energetically distinct configurations of the four adjacent spins:
+
+1. All adjacent spins are $+ \Rightarrow \Delta E = \pm8J$. 
+
+2. Three are $+$ while one is $- \Rightarrow \Delta E = \pm 4J$. 
+
+3. Two are $-$ and two are $+ \Rightarrow \Delta E = 0$. 
+
+4. Three are $-$ and one is $+ \Rightarrow \Delta E = \mp 4J$. 
+
+5. All adjacent spins are $- \Rightarrow \Delta E = \mp 8J$.
+
+Where the upper sign corresponds to the spin flipped initially in spin up ($+$) state and the lower sign corresponds to the spin flipped initially in spin down ($-$) state.
+We thus get  $\Delta E\in\{\pm8J, \pm4J, 0\}$. This means we can calculate the exponentials, $w$, in the Metropolis algorithm before we loop over all the Monte Carlo cycles and spins, saving us a lot of computational time.
+
+Furthermore, if $\Delta E\leq 0$ then $w\geq0$, so there is no need to check $\Delta E\leq0$ separately. We can go directly to the $r\leq w$-test, saving us one $if$-test in the algorithm.
+
+For low temperatures, the configurations of all spins pointing in the same direction (with maximal negative energy) should be significantly more probable than a random configuration. This can be seen directly from the form of the probability distribution $\propto e^{-E_i/(k_BT)}$. It will therefore be natural to choose this as the initial configuration. For higher temperatures, we see that the probability of being in a state with zero energy remains constant (the exponential is equal to $1$), while all other exponentials approaches $1$. Thus, the probability of being in a configuration with all spins aligned will no longer be significantly larger than the probability of any other configuration.
+
+\section{Results}
+
+The first step is to check the numerical results from using the Metropolis algorithm against the analytical results we have for the $L=2$-case. This was done for $T=1.0$ in units of $kT/J$. In doing this we also check roughly how many Monte Carlo cycles are needed in order to get good correspondance. This is done by looping the entire main program for $k = 2,3,\dots,10$, each time letting the number of Monte Carlo cycles be $10^k$.
+
+In order for us to get good results, we also let the system go through the thermalization phase before we start collecting data. This is done by letting the Metropolis algorithm run and compute the mean energy every $n\cdot m$'th time and comparing it with the mean energy computed the $(n-1)\cdot m$'th time. Once they do not differ by more than 1\% we may assume that the system has reached the most likely energy at the given temperature. This will be referred to as the equilibrium requirement. Here we let $n=1,2,3,\dots$ and chose $m=10$ for $k\leq 4$, $m=100$ for $k=5$ and $m=1000$ for $k\geq 6$. The values for $m$ were chosen in such a way that it would be possible for the mean energy to fulfill the equilibrium requirement for a low number of Monte Carlo cycles and for giving better accuracy for a high number of Monte Carlo cycles.
+
+The requirement was still never fulfilled for $k=2,3$, the rest of the results are summarized in Table 2. The analytical results are found by merely inserting $T = 1.0$ in the chosen units in the expressions found above.
+
+\begin{table}[hbt!]
+\centering
+\begin{tabular}{|c|c|c|c|c|c|}
+ \# MC cycles & $\langle E\rangle $ & $\langle |M|\rangle$ & $C_V$ & $\chi$ & $n$ \\ \hline
+$10^4$  &  -7.1696      &  3.5884  &  5.95364       &   1.46979 & 101\\
+$10^5$  &  -7.17592     &   3.59064 &   5.91353     &    1.4645 & 1010\\
+$10^6$  &  -7.1775     &   3.5911   & 5.90347       &   1.46369 & 101\\
+$10^7$  &  -7.90318   &     3.95425 &   0.765193    &      0.175604 & 101\\
+$10^8$  &  -7.97581  &     3.99059  &  0.192945     &     0.0321785 & 101\\
+$10^9$  &  -7.9831  &      3.99423  &  0.134953       &   0.0176719 & 101\\
+$10^{10}$  &  -7.98385 &       3.9946 &   0.128966   &      0.0162002 & 101\\ \hline
+Analytical &  -7.98392 & 3.9946 & 0.128329 & 0.016043 & - \\ \hline
+\end{tabular}
+\caption{Calculated expectation values for the $2\times2$-lattice for different numbers of Monte Carlo cycles. The analytical results are shown for comparison.}
+\end{table}
+
+We see that the mean energy and absolute value of magnetization converges quickly and gives pretty good results already around $k=7,8$. The specific heat and susceptibility on the other hand converges slowly and the numerically computed values are in good agreement with the analytical only at $k=10$, which takes a lot of time to compute.
+
+Knowing our algorithm works, we move on to study larger lattices. We start with a $20\times20$-lattice. To begin with, we study whether the previously defined equilibrium requirement is reasonable in this case. This is done by plotting the mean energy as a function of the number of Monte Carlo cycles and graphically check when we reach equilibrium. Keeping in mind that a Monte Carlo cycle corresponds to a time step, all of the following plots can be considered as showing the time development of the system.
+
+
+\begin{figure}[hbt!]
+\centering
+\includegraphics[scale=0.6]{meanenergyT10.png}
+\caption{The mean energy as a function of the number of Monte Carlo cycles for $T=1.0$ for an ordered and a disordered initial configuration of the lattice.}
+\end{figure}
+
+\begin{figure}[hbt!]
+\centering
+\includegraphics[scale=0.6]{meanmagT10.png}
+\caption{The mean absolute value magnetization as a function of the number of Monte Carlo cycles for $T=1.0$ for an ordered and a disordered initial configuration of the lattice.}
+\end{figure}
+
+\begin{figure}[hbt!]
+\centering
+\includegraphics[scale=0.6]{meanenergyT24.png}
+\caption{The mean energy as a function of the number of Monte Carlo cycles for $T=2.4$ for an ordered and a disordered initial configuration of the lattice.}
+\end{figure}
+
+\begin{figure}[hbt!]
+\centering
+\includegraphics[scale=0.6]{meanmagT24.png}
+\caption{The mean absolute value magnetization as a function of the number of Monte Carlo cycles for $T=2.4$ for an ordered and a disordered initial configuration of the lattice.}
+\end{figure}
+
+Figure 1 shows the mean energy as a function of Monte Carlo cycles for $T=1.0$ for both an ordered and a disordered initial spin configuration. The disordered configuration was generated by traversing the lattice, for each spin picking a random number between 0 and 1 and letting the spin be positive if the random number was less than 0.5 and negative otherwise. We see that the ordered state quickly reaches an equilibrium, the most likely energy for the low temperature $T=1.0$ is very close to $E = -2J$ per spin. We see that when the lattice starts out in a disordered configuration its initial energy is close to zero and it struggles to reach the most likely energy as it converges to it rather slowly.
+
+In Figure 2 we see the situation for the mean of the absolute value of the magnetization. Not surprisingly, the lattice with an ordered initial configuration starts out with mean magnetization 1 per spin and settles quickly in the most likely absolute value magnetization close to 1. Just as unsurprisingly the lattice with a disordered initial configuration starts out with a magnetization close to zero and struggles in the same way as the energy to reach the most likely value. We can see that it converges slower than the energy.
+
+In these cases the equilibrium requirement was fulfilled at $n=101$, meaning that the first 101000 Monte Carlo cycles would have been discarded. This seems like a complete waste when looking at the plots and taking into account the fact that computation takes some time when working with the $20\times20$ lattice. Relaxing the requirement by starting to collect data when fluctuations in mean energy are at 5\% instead of 1\% the requirement is fulfilled at $n=20$. 
+
+This still seems like a waste when looking at the plots of the energy and magnetization for lattices starting out in the ordered state. It also seems like quite the overkill when looking at Figure 3 which shows the same situation as Figure 1 only with a higher temperature of $T=2.4$. Here we see the energy of the ordered configuration starting out in $-2J$ and that of the disordered in 0. They quickly converge to a common value which is larger than $-2J$ due to the increased temperature of the system. It does however seem like the system is pretty close to equilibrium after only 2000 Monte Carlo cycles.
+
+When we then look at Figure 4, we get a different picture. The differences in magnetization when starting out in an ordered or a disordered state are quickly wiped out, but the fluctuations are still relatively large at 20000 Monte Carlo cycles. We will take this as an indication that the equilibrium requirement should not be relaxed any further at the risk of getting non-accurate values of magnetization and by extension susceptibility at higher temperatures.
+
+
+To study the development of the lattice it is also interesting to plot the number of accepted configurations against the number of Monte Carlo cycles. This is done by having a counter that ticks every time a new spin configuration is accepted and Figure 5 shows the result.
+
+\begin{figure}[hbt!]
+\centering
+\includegraphics[scale=0.6]{configurations.png}
+\caption{The relative number of accepted configurations as a function of Monte Carlo cycles.}
+\end{figure}
+
+We see that after a short time it does not matter whether or not we start out in an ordered or a disordered state as far as the relative number of accepted configurations is concerned. For $T=1.0$ the number of accepted states quickly goes to zero. This is bad news for the slowly converging energy and especially magnetization for the $T=1.0$ disordered state: if we accept fewer and fewer new configurations it will take longer and longer for the system to change, thus convergence will slow down further.
+
+The number of accepted configurations for high temperature acts similarly, only it converges to a value closer to 0.25, meaning that about 25\% of the proposed new configurations still get accepted after equilibrium is reached. This is expected as the system in this case has many more microstates with relatively high probability than the low temperature system. 
+
+\end{document}
