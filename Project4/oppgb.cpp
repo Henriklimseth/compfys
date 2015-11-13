@@ -34,7 +34,7 @@ int main()
 
         double* w;                            //Holds all five possible transition probabilities for the 2D Ising model
         w = new double[17];
-        w[0]=exp(8*T); w[4]=exp(4*T); w[8] = 1.0; w[12] = exp(-4*T); w[16] = exp(-8*T);
+        w[0]=exp(8/T); w[4]=exp(4/T); w[8] = 1.0; w[12] = exp(-4/T); w[16] = exp(-8/T);
 
         int **spins;                         // Holds all spin values
         spins = new int*[L];
