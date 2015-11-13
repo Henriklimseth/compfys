@@ -58,7 +58,7 @@
 %\bigskip \\
 \begin{minipage}{0.49\textwidth}
     \begin{center} \large
-        Candidate number  \\[0.8cm]
+        Candidate number 65 \\[0.8cm]
     \end{center}
 \end{minipage}
 
@@ -73,10 +73,11 @@
 
 \section*{Abstract}
 
-In this project we will study the properties and phase transitions of a ferromagnet using the Ising model in two dimensions without an external magnetic field.
+In this project we will study the properties and phase transitions of a ferromagnet using the Ising model in two dimensions without an external magnetic field. With the behaviour of the physical quantities of a system of finite size near the phase transition we will be able to extrapolate the critical point of the system in the thermodynamic limit. This will be done by use of the Metropolis algorithm.
 
 
 \section{Theory}
+Much of the discussion concerning the canonical ensemble, the Ising model and phase transitions follows closely that of [1].
 \subsection{The Canonical Ensemble}
 We work in the canonical ensemble where the the probability distribution over microstates is given by the Boltzmann distribution
 $$P_i(\beta) = \f{e^{-\beta E_i}}{Z}$$
@@ -103,14 +104,15 @@ which are the quantities we will be focusing on in this project.
 Note that we are only calculating the susceptibility using the mean of the absolute value of the magnetization and not the magnetization itself. Due to the symmetry of the problem $\langle M\rangle$ will always be zero. This will not, however, always be the case in the numerical computation. Here the magnetization may do abrupt jumps from its maximum negative to its maximum positive value (and vice versa), without changing the energy of the system. This is a finite lattice effect and to avoid it, we simply replace $M$ with its absolute value.
 
 \subsection{The Ising Model}
-We start by modeling a magnet as a collection of spins where each spin can be in either an up-state or down-state.
+To make sense of the model, we first need to make sense of magnetic properties of a material as a phenomenon. To do this, we inspect the material at the atomic level. The orbital motion and spin of atomic electrons are equivalent to tiny current loops and we know electric currents induce magnetic fields. Thus individual atoms create magnetic fields around them when their orbital electrons have a net magnetic moment as a result of their angular momentum. The macroscopic magnetic properties of a substance arise from the magnetic moments of its component atoms and molecules [2].
+It is sensible then, to model a magnet as a collection of spins. We simplify the problem by only allowing for the spins to be in one of two states: either spin-up ($+$) or spin-down ($-$).
 In the Ising model only neighboring spins interact so that the energy can be expressed as
 $$E = -J\sum\limits_{<kl>}^Ss_ks_l - B\sum_{k=1}^{S}s_k$$
 
-Where $<kl>$ means we are only summing over neighboring spins. Each spin can be in spin-up or spin-down state, so $s_k=\pm1$. $S$ is the total number of spins, $B$ represents an external magnetic field and $J$ is a coupling constant. In our case, we thus have $B=0$ as there is no external magnetic field and $J>0$ since this means it will be energetically favorable for neighboring spins to be aligned, corresponding to the case of a ferromagnet. We will also only study the situation in two dimensions, placing the spins in a square lattice of finite dimension $L$, so the expression for the energy of the system can be rewritten
+Where $<kl>$ means we are only summing over neighboring spins. Each spin can be in spin-up or spin-down state, so we let $s_k=\pm1$ with $+$ corresponding to up and $-$ corresponding to down. $S$ is the total number of spins, $B$ represents an external magnetic field and $J$ is a coupling constant. In our case, we thus have $B=0$ as there is no external magnetic field and $J>0$ since this means it will be energetically favorable for neighboring spins to be aligned, corresponding to the case of a ferromagnet. We will also only study the situation in two dimensions, placing the spins in a square lattice of finite dimension $L$, so the expression for the energy of the system can be rewritten
 $$E = -J\sum\limits_{<kl>}^{L\times L}s_ks_l$$ with $J>0$.
 
-In this project we will work with periodic boundary conditions, meaning that the spins located on the edge of lattice interact with each other. If we label the spins $s_{i,j}$ where $i$ and $j$ corresponds to row and column placement of the spin respectively, $0\leq ij\leq L$ we can visualize the lattice like this:
+In this project we will work with periodic boundary conditions, meaning that the spins located on the edge of the lattice interact with each other. If we label the spins $s_{i,j}$ where $i$ and $j$ corresponds to row and column placement of the spin respectively, $0\leq ij\leq L$ we can visualize the lattice like this:
 
 $$\begin{matrix} & \vline &  s_{L1}  & s_{L2} & \dots & s_{LL}& \vline & \\ \hline
 s_{1L} & \vline & s_{11} & s_{12} & \dots & s_{1L}& \vline & s_{11}\\
@@ -121,7 +123,7 @@ s_{LL} & \vline & s_{L1} & s_{L2} & \dots & s_{LL}& \vline & s_{L1} \\ \hline
 
 Where the center corresponds to the actual lattice and the edges illustrate how the boundary of the actual lattice interacts. Each spin interacts with the spins immediately next to it.
 
-With this visualization it is easy to get a more practical expression for the energy for use in numerical computations. By traversing the lattice spins and look at interactions with the spin directly behind and directly below the current spin we count every interaction and avoid double counting. The energy can thus be expressed as:
+With this visualization it is easy to get a more practical expression for the energy for use in numerical computations. By traversing the lattice spins and looking at interactions with the spin directly behind and directly below the current spin we count every interaction and avoid double counting. The energy can thus be expressed as:
 
 \begin{align*}
  E &= -J\sum\limits_{<(ij)(kl)>}s_{ij}s_{kl}\\
@@ -132,6 +134,11 @@ With this visualization it is easy to get a more practical expression for the en
 Where
 $$p(i) = \Bigg\{ \begin{matrix}
 L, & i=0 \\ 0, & i=L+1 \\  i, & \text{else} \end{matrix}$$
+
+The magnetization of the system will of course be the sum of spins:
+
+$$M = \sum\limits_i s_i$$
+corresponding to the net magnetic moment of the system being the vector sum of the magnetic moments of all the orbital motions and the spins of all the electrons of all the atoms in the system [2].
 
 \subsection{Analytical Approach to the L=2 Case}
 For a lattice size $L=2$ the system only contains four spins, which can be in two possible states each, so we only get 16 possible microstates. Then we can easily calculate the partition function by examining the possible microstates. This will serve as a test of the accuracy of the numerical algorithm which also will be applicable to larger lattices.
@@ -205,6 +212,29 @@ and the susceptibility:
 &= 4\beta \f{4\cosh(8\beta J) + 2\sinh(8\beta J) +3}{(\cos(8\beta J) +3) ^2}.
 \end{align*}
 
+\subsection{Phase Transitions}
+As we are going to study phase transitions, it will pay off to know what they are. A phase transition, as described by the Oxford Dictionary of Physics, is a change in a feature that characterizes a system [2]. It is marked by abrupt macroscopic changes as an external parameter, in our case the temperature, is changed. The temperature at which a phase transition takes place is called a critical point ($T_C$).
+
+Phase transitions can be classified by their order. If there is nonzero latent heat the transition is said to be of first order, examples of this are vaporization, melting and crystallization. If the latent heat is zero it is said to be of second order [2]. This means that during a second order phase transition the systems macroscopic properties will change drastically without exchanging any heat with the environment.
+
+Near a phase transition we can characterize the behaviour of many physical quantities by a power law expansion. We get
+
+$$\langle M(T)\rangle \propto (T-T_C)^\beta,\ \ \ C_V(T) \propto |T_C-T|^{-\alpha},\ \ \ \chi(T) \propto |T_C-T|^{-\gamma}$$
+where the critical exponents found from mean field theory is $\beta = 1/8$, $\alpha = 0$ and $\gamma = 7/4$.
+
+An important quantity in studying phase transitions is the correlation length $\xi$. It defines the length scale where the overall properties of a material starts to differ from its bulk properties and is the distance at which the fluctuations of the microscopic degrees of freedom, in our case the spins, are significantly correlated. Near a second order phase transition, the spins get more and more correlated as we approach $T_C$ so $\xi$ diverges as
+$$\xi(T) \propto |T_C-T|^{-\nu}$$
+Since we are limited to a finite lattice of dimension $L$, $\xi$ will be proportional to $L$, meaning that the critical temperature scales as $$T_C(L)-T_C(\infty) = aL^{-1/\nu}$$
+Setting $T=T_C$ and inserting it in the above expressions we obtain the following expressions:
+$$\langle M(T)\rangle \propto L^{-\beta/\nu},\ \ \ \ C_V(T)\propto L^{\alpha/\nu},\ \ \ \ \chi(T) \propto L^{\gamma/\nu}$$
+near $T_C$.
+These expressions can then be used to approximate $T_C$.
+
+The exact result, after Lars Onsager, is 
+$$\f{kT_C}{J} = \f{2}{\ln(1+\sqrt{2})} \approx 2.269$$
+with $\nu = 1$.
+
+
 \section{The Metropolis Algorithm}
 For larger lattices, calculating the partition function quickly becomes rather cumbersome as the number of spins goes as $L^2$ and each spin can have one of two different values ($\pm1$), giving a total of $2^{L^2}$ possible microstates of the system.
 
@@ -251,7 +281,7 @@ Furthermore, if $\Delta E\leq 0$ then $w\geq0$, so there is no need to check $\D
 
 For low temperatures, the configurations of all spins pointing in the same direction (with maximal negative energy) should be significantly more probable than a random configuration. This can be seen directly from the form of the probability distribution $\propto e^{-E_i/(k_BT)}$. It will therefore be natural to choose this as the initial configuration. For higher temperatures, we see that the probability of being in a state with zero energy remains constant (the exponential is equal to $1$), while all other exponentials approaches $1$. Thus, the probability of being in a configuration with all spins aligned will no longer be significantly larger than the probability of any other configuration.
 
-\section{Results}
+\section{Results and Discussion}
 
 The first step is to check the numerical results from using the Metropolis algorithm against the analytical results we have for the $L=2$-case. This was done for $T=1.0$ in units of $kT/J$. In doing this we also check roughly how many Monte Carlo cycles are needed in order to get good correspondance. This is done by looping the entire main program for $k = 2,3,\dots,10$, each time letting the number of Monte Carlo cycles be $10^k$.
 
@@ -325,6 +355,100 @@ To study the development of the lattice it is also interesting to plot the numbe
 
 We see that after a short time it does not matter whether or not we start out in an ordered or a disordered state as far as the relative number of accepted configurations is concerned. For $T=1.0$ the number of accepted states quickly goes to zero. This is bad news for the slowly converging energy and especially magnetization for the $T=1.0$ disordered state: if we accept fewer and fewer new configurations it will take longer and longer for the system to change, thus convergence will slow down further.
 
-The number of accepted configurations for high temperature acts similarly, only it converges to a value closer to 0.25, meaning that about 25\% of the proposed new configurations still get accepted after equilibrium is reached. This is expected as the system in this case has many more microstates with relatively high probability than the low temperature system. 
+The number of accepted configurations for high temperature acts similarly, only it converges to a value closer to 0.25, meaning that about 25\% of the proposed new configurations still get accepted after equilibrium is reached. This is expected as the system in this case has many more microstates with relatively high probability than the low temperature system. This can further be illustrated by plotting the probability distribution $P(E)$, by simply counting the number of times a given energy appears in the computation and making a histogram.
+Figures 6 and 7 shows the result for $T=1.0$ and $T=2.4$.
 
+\begin{figure}[hbt!]
+\centering
+\includegraphics[scale=0.6]{P_E_lowT.png}
+\caption{Probability distribution over energies per spin for the $L=20$ case at $T=1.0$ using $10^7$ Monte Carlo cycles.}
+\end{figure}
+
+\begin{figure}[hbt!]
+\centering
+\includegraphics[scale=0.6]{P_E_highT_2.png}
+\caption{Probability distribution over energies per spin for the $L=20$ case at $T=2.4$ using $10^7$ Monte Carlo cycles.}
+\end{figure}
+
+
+The plots are consistent with the theory of the problem. We have previously observed from the mathematical expression of the Boltzmann distribution that the probability for all the spins to be aligned is much larger than the probability of being in any other state when $T$ is low. Thus the probability of the system having the energy corresponding to this particular state will be the largest. We have also observed that the significance of this state vanishes when $T$ grows. This is exactly what figures 6 and 7 show.
+
+These simulations returned a variance of $\sigma_E^2 = 5.82032\cdot 10^5$ for $T=1.0$ and $\sigma_E^2 = 0.0202862$ for $T=2.4$, yielding a standard deviation of $\sigma_E = 0.00763$ for $T=1.0$ and $\sigma_E = 0.14243$ for $T=2.4$. This is once again consistent with theory and physical intuition. When $T=1.0$ there is not enough thermal energy in the system to cause disorder, meaning the spins are allowed to stay in the most energetically favorable configuration (spins aligned, $E=-2.0$ per spin) without much disturbance. This implies a low standard deviation. For $T=2.4$ on the other hand, there is too much thermal energy for the system to settle in any kind of configuration (consult figure 5), so the energy will largely fluctuate, implying a larger standard deviation. The most probable configuration is still the one where all spins are aligned (according to the mathematical form of the Boltzmann distribution), but the probability for the system to have this energy is vanishing. The most probable energy is now one with high degeneracy, so many disordered states corresponds to it. Thus, the most probable macrostate will be the one with the most microstates corresponding to it.
+
+The probability distribution is now starting to resemble a Gaussian centered at the mean energy.
+
+
+\begin{figure}[hbt!]
+\centering
+\includegraphics[scale=0.6]{energy.png}
+\caption{The mean energy per spin of the system as a function of temperature for four different lattice sizes.}
+\end{figure}
+
+\begin{figure}[hbt!]
+\centering
+\includegraphics[scale=0.6]{magnetization.png}
+\caption{The mean absolute value magnetization per spin of the system as a function of temperature for four different lattice sizes.}
+\end{figure}
+
+\begin{figure}[hbt!]
+\centering
+\includegraphics[scale=0.6]{heatcapacity.png}
+\caption{The specific heat per spin of the system as a function of temperature for four different lattice sizes.}
+\end{figure}
+
+\begin{figure}[hbt!]
+\centering
+\includegraphics[scale=0.6]{susceptibility.png}
+\caption{The susceptibility per spin of the system as a function of temperature for four different lattice sizes.}
+\end{figure}
+
+
+We want to study the systems behaviour when the temperature changes and for even larger lattice sizes. This is done by putting the entire program in a loop over different temperatures. Figures 8-11 shows how the system develops as temperature is varied for 20 temperature steps, each with $10^6$ Monte Carlo cycles.
+
+As temperature increases we get the usual result that mean energy increases (towards zero) and the absolute value mean magnetization drops toward zero, see Figures 8 and 9. The most interesting are Figures 10 and 11. We see that the specific heat and susceptibility of the system exhibits divergent behaviour. This is an indication that the system is undergoing a phase transition. Due to the finite lattice we are working with we do not get infinities, as explained in the theory section. The susceptibility and specific heat should truly diverge in the thermodynamic limit $L\rightarrow \infty$ and should do so at the true critical temperature $T_C(\infty)$.
+
+Since the heat capacity diverges, we must have a discontinuity in energy at the critical temperature (in the thermodynamic limit) because the heat capacity is proportional to the derivative of $\langle E\rangle$ and the derivative diverges if the function is discontinous. From Figure 8 it is difficult to spot an emerging discontinuity. One can barely see a kink in the $80\times80$-plot just around $T=2.29$, but this could be due to few data points. A discontinuity should become visible by increasing $L$, and is visible in the exact solution in the thermodynamic limit.
+
+Seeing as the susceptibility exhibits the most diverging behaviour, we will use this to try and pinpoint the value for the critical temperature in the thermodynamic limit. We have from before that
+$$T_C(L)-T_C(\infty) = aL^{-1}$$ where we have put $\nu=1$. Our job is to determine the constant of proportionality $a$. The simplest way to do this is by means of a linear regression with the data set  $x = [1/80, 1/60, 1/40, 1/20]$, $y=[T_C(80), T_C(60), T_C(40), T_C(20)]$ and evaluate the resulting function at zero, corresponding to $L=\infty$.
+
+Our run of the code gave $y = [2.2974, 2.29474, 2.31579, 2.37895]$, and a standard least-squares linear regression gave
+$T_C(1/L) = 2.2596518 + 2.35788306(1/L)$ yielding $T_C(\infty) \approx 2.26$. Judging from the small number of interpolation points we used, this is impressively accurate as
+
+$$\f{T_C^{numerical}(\infty)}{T_C^{exact}(\infty)} = \f{2.26}{2.269} \approx 0.996$$
+we are only 4\% off. Figure 12 shows the curve resulting from this regression.
+
+
+\begin{figure}[hbt!]
+\centering
+\includegraphics[scale=0.6]{criticaltemp.png}
+\caption{The critical temperature of the system as a function of the lattice size inverse.}
+\end{figure}
+
+
+\section{Conclusion}
+We have seen that with only four different lattice sizes we get an impressively accurate estimate of the critical temperature in the thermodynamic limit. It was unfortunate that the critical temperature for $L=80$ and $L=60$ were the same. Had we gotten different values for these, the regression may have been even more accurate. This could be accomplished by choosing an even finer temperature resolution or letting the evaluation points of temperature be located more densely around the critical temperature. Actually, by assuming that the critical point for $L=60$ is wrong and excluding it in doing the regression, we obtain an even more accurate estimate of $T_C(\infty) \approx 2.263$, then we are only off by 2.6\%. The validity of excluding $T_C(60)$ is, however, speculative.
+
+An interesting observation is that the specific heat can not follow the power law $C_V \propto |T-T_C|^\alpha$ with $\alpha = 0$, seeing as $C_V$ exhibits divergent behaviour around $T_C$ and ''$|T-T_C|^\alpha$ with $\alpha=0$'' is just a very inconvenient way of writing ''$1$'' (in the case of $T=T_C$ we get $0^0$ which is strange, but still not $\infty$). Assuming $\chi\propto |T-T_C|^{-\gamma} $ with $\gamma = 7/4$ is just about correct and comparing the rate at which $C_V$ and $\chi$ are diverging it seems fair to assume that $\alpha$ is a very small, but non-zero, positive number. This makes sense as this is the case for most magnets [3].
+
+
+\section{Codes}
+All the codes listed can be found at the github domain
+
+https://github.com/Henriklimseth/compfys/tree/master/Project4
+
+1. oppgb.cpp: used for finding values for the physical quantities in the $L=20$-case.
+
+2. 
+
+\section{References}
+[1]: Morten Hjorth-Jensen, Computational Physics Lecture Notes Fall 2015, chapter 13. Available at
+
+https://github.com/CompPhysics/ComputationalPhysics1/tree/master/doc/Lectures
+
+[2]: Oxford Dictionary of Physics, seventh edition, Oxford University Press (2015). See magnetism, phase transition. 
+
+[3]: Finn Ravndal et.al. Statistical Physics - a second course, available at
+
+http://www.uio.no/studier/emner/matnat/fys/FYS4130/v14/documents/kompendium.pdf, see pp. 133-134.
 \end{document}
